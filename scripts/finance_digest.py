@@ -37,7 +37,7 @@ if _env_path.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 from lib.agnes_client import AgnesClient
-from lib.yahoo_finance import get_ticker_data, search_tickers
+from lib.yahoo_finance import get_ticker_data, search_tickers, get_quick_quote
 from lib.yahoo_news import get_stock_news, get_upcoming_events
 from lib.web_search import search_web
 from lib.reddit_search import search_reddit
@@ -45,6 +45,7 @@ from lib.google_news_search import search_google_news
 from lib.stocktwits_search import search_stocktwits, stocktwits_sentiment
 from lib.sec_edgar_search import search_sec_filings
 from lib.finnhub_search import get_finnhub_analytics
+from lib.youtube_search import recommend_video
 
 
 # ------------------------------------------------------------------ #
@@ -71,8 +72,19 @@ STYLE RULES (strict):
   counts) and recent SEC filings. When present and relevant, weave them into the
   brief in plain English (e.g. "most small investors posting today are bullish",
   or "the company just filed an 8-K about a major event").
+- NEVER use em dashes or en dashes (the "—" or "–" characters). Use commas,
+  periods, or the word "to" for ranges. This is strict.
 
-ACTION SIGNAL — choose exactly one and back it with the data:
+WHAT AN INVESTOR ACTUALLY WANTS (keep every sentence useful to a decision):
+- Tie each point to money: what it means for the value of their shares.
+- Name the risk and the reward, not just the news. What is the upside if it
+  works out, and what is the downside if it does not?
+- Call out dates that matter (earnings, ex-dividend, product launches) so they
+  know when to pay attention.
+- Say plainly what would change the picture: the one or two things to watch that
+  would turn a HOLD into a BUY or a SELL.
+
+ACTION SIGNAL: choose exactly one and back it with the data:
 - ACCUMULATE: Buy more on dips. Use when fundamentals are healthy and the
   price is in a clear buy zone (near support, off the 52-week high).
 - HOLD: Do nothing. Keep what you have. Use when there is no urgent reason
@@ -105,7 +117,7 @@ fences. The object must match this shape exactly:
     "outlook": "1 to 2 sentences on what could go wrong",
     "level_to_watch": 0
   },
-  "sentiment_quote": "one short line from a real source (Reddit, news, etc.) that captures how people feel — keep it under 140 characters",
+  "sentiment_quote": "one short line from a real source (Reddit, news, etc.) that captures how people feel, keep it under 140 characters",
   "citations": ["Yahoo Finance", "Google News", "Reuters", "StockTwits", "SEC EDGAR", "r/stocks"]
 }
 
@@ -115,32 +127,57 @@ below today's price (a stop-out point if things go badly). If you cannot infer
 a level from the data, set it to null."""
 
 
-ESSAY_PROMPT = """You are Agnes, a plain-English finance writer. Write a thorough,
-clear explanation of what is happening with this stock RIGHT NOW and why it matters
-to someone who owns or is watching it.
+ESSAY_PROMPT = """You are a plain-English finance writer. Write a deep, thorough explanation
+of what is happening with this stock over the research window and why it matters to
+someone who owns or is watching it. This should read like a well-researched article,
+not a summary. Each paragraph must be substantial, detailed, and grounded in the
+specific data and news provided.
 
-STRUCTURE — write exactly 4 to 5 flowing paragraphs of prose. No headings, no
+STRUCTURE: write exactly 5 to 6 flowing paragraphs of prose. No headings, no
 bullet points, no lists. Cover these angles in order:
-  1. What is happening today — the price move, the main driver, the overall mood.
-  2. Why it is happening — the business context, recent events, what changed and when.
-  3. What the news and data are saying — weave in the headlines, any retail sentiment,
-     and any official filings. What is the market focused on or worried about?
-  4. What this means for someone who holds the stock — key levels to watch, risks
-     on both sides, and what would need to happen for the picture to change.
-  5. The bigger picture — where this moment fits in the company's longer story or
-     what it signals about the sector.
+  1. What is happening right now. The price move, the percentage change, the overall
+     mood in the research window. Name the specific dates, numbers, and scale of the move.
+  2. Why it is happening. The core business reason. What specific events, decisions,
+     products, earnings, or market shifts drove this? Give concrete details and dates.
+  3. What the news, filings, and data are all saying. Weave in specific headlines and
+     their key takeaways. What themes keep coming up across multiple sources? What is
+     the market focused on, worried about, or excited by right now?
+  4. The analyst and insider picture. What do professional analysts say about the stock
+     (consensus, price targets)? What are company insiders doing? What do the financial
+     ratios say about the company's health versus its price?
+  5. What this means for someone who holds or is watching the stock. Key price levels
+     to watch, specific risks on both sides, and what would have to happen for the
+     story to change. If the reader owns the stock, speak directly to their position:
+     what their gain or loss means in dollars and what to do about it.
+  6. The bigger picture. How does this moment fit the company's longer story, its
+     competitive position, or what it says about the broader sector right now?
+
+WRITE FOR AN INVESTOR DECIDING WHAT TO DO:
+- Frame the situation as risk versus reward. Make the upside case and the downside
+  case both concrete, with the price levels that prove each one right or wrong.
+- Connect every fact to the reader's money: how it affects the value of their shares.
+- Flag the dates that matter (earnings, ex-dividend, launches) so they know when the
+  next move could come. If next_earnings is given, say how many days away it is.
+- When market_context is provided, say whether the stock outran or lagged the S&P
+  500 and its own sector today. Weave in analyst_trend and peer_tickers when present.
 
 RULES:
+- Each paragraph must be at least 4 to 6 full sentences. Write in full depth, not
+  bullet-point summaries dressed as prose.
+- NEVER use em dashes or en dashes (the "—" or "–" characters). Use commas, periods,
+  or the word "to" for ranges. This is strict.
 - Seventh-grade reading level. Clear sentences. No finance jargon whatsoever.
-  Forbidden words: "headwinds", "tailwinds", "valuation", "compression",
-  "consolidation", "multiple", "re-rate", "outperform", "underperform".
-- Use real dollar amounts, percentages, and dates the reader can picture.
-- Ground every claim in the verified numbers and research given below.
+  Forbidden: "headwinds", "tailwinds", "valuation", "compression", "consolidation",
+  "multiple", "re-rate", "outperform", "underperform", "thesis", "narrative".
+- Use real dollar amounts, percentages, dates, and company names from the data.
+  Ground every claim in the verified numbers and research provided.
   Never invent or estimate numbers not in the data.
-- If the reader owns the stock, speak directly to what their gain or loss
-  means given what is happening right now.
+- Explicitly reference specific news headlines and their substance. Do not vaguely
+  say "recent news was positive." Describe what the news actually said.
+- If the reader owns the stock, speak directly to what their gain or loss means given
+  what is happening right now.
 - Be calm, thorough, and honest. Never hype. Never alarm unnecessarily.
-- Output only the essay prose. No preamble, no JSON, no markdown."""
+- Output only the essay prose. No preamble, no JSON, no markdown headers."""
 
 
 # ------------------------------------------------------------------ #
@@ -179,6 +216,44 @@ def _num(v):
 def _norm_signal(v) -> str:
     s = str(v or "").strip().upper()
     return s if s in ACTION_SIGNALS else "HOLD"
+
+
+def _strip_dashes(text: str) -> str:
+    """Remove em/en dashes so generated prose does not read as AI-written.
+
+    A dash between two numbers becomes "to" (a price range like ``$10–$12``
+    reads "$10 to $12"); a dash used as a clause break becomes a comma. Doubled
+    punctuation and spaces left behind by the substitution are tidied up. Plain
+    hyphens (``52-week``, ``day-on-day``) are untouched.
+    """
+    if not text:
+        return text
+    s = str(text)
+    s = re.sub(r"(\d)\s*[—–]\s*(\$?\d)", r"\1 to \2", s)   # numeric ranges
+    s = re.sub(r"\s*[—–]\s*", ", ", s)                      # clause-break dash
+    s = re.sub(r"\s+,", ",", s)                             # space before comma
+    s = re.sub(r",\s*([.,;:!?])", r"\1", s)                 # ", ." -> "."
+    s = re.sub(r",\s*,", ", ", s)                           # ", ," -> ", "
+    s = re.sub(r"[ \t]{2,}", " ", s)                        # collapse spaces
+    return s.strip()
+
+
+def _clean_digest_text(digest: dict) -> dict:
+    """Strip em/en dashes from every reader-facing text field of a digest."""
+    if not isinstance(digest, dict):
+        return digest
+    for key in ("headline", "tldr", "sentiment_quote"):
+        if digest.get(key):
+            digest[key] = _strip_dashes(digest[key])
+    act = digest.get("action")
+    if isinstance(act, dict) and act.get("reasoning"):
+        act["reasoning"] = _strip_dashes(act["reasoning"])
+    digest["drivers"] = [_strip_dashes(d) for d in (digest.get("drivers") or [])]
+    for case in ("bull_case", "bear_case"):
+        c = digest.get(case)
+        if isinstance(c, dict) and c.get("outlook"):
+            c["outlook"] = _strip_dashes(c["outlook"])
+    return digest
 
 
 def _coerce_digest(raw: dict, snapshot: dict) -> dict:
@@ -541,18 +616,22 @@ def _trim_research_for_model(research: dict, quick: bool) -> dict:
     process irrelevant tokens. We keep the top headlines (the model only
     quotes 2-3 of them) and trim long fields.
     """
-    news_limit = 4 if quick else 6
-    web_limit = 3 if quick else 4
+    news_limit = 5 if quick else 10
+    web_limit = 3 if quick else 6
     reddit_limit = 3 if quick else 5
 
     def _slim_news(items):
-        return [
-            {"title": (n.get("title") or "")[:160],
-             "publisher": n.get("publisher") or "",
-             "age": n.get("age") or ""}
-            for n in (items or [])[:news_limit]
-            if n.get("title")
-        ]
+        out = []
+        for n in (items or [])[:news_limit]:
+            if not n.get("title"):
+                continue
+            entry = {"title": (n["title"])[:160], "age": n.get("age") or ""}
+            if n.get("summary"):
+                entry["summary"] = n["summary"][:220]
+            if n.get("publisher"):
+                entry["publisher"] = n["publisher"]
+            out.append(entry)
+        return out
 
     def _slim_web(items):
         return [
@@ -642,6 +721,16 @@ def live_synthesis(client: AgnesClient, real: dict, research: dict, days: int,
         facts["insider_activity"] = finnhub["insider"]
     if finnhub.get("ratios"):
         facts["financial_ratios"] = finnhub["ratios"]
+    if finnhub.get("rec_trend"):
+        facts["analyst_trend"] = finnhub["rec_trend"].get("direction")
+    if research.get("market"):
+        facts["market_context"] = research["market"]
+    peers = finnhub.get("peers")
+    if peers:
+        facts["peer_tickers"] = peers
+    earn = _earnings_countdown(research.get("events", {}))
+    if earn:
+        facts["next_earnings"] = earn
 
     slim_research = _trim_research_for_model(research, quick)
     pos_note = (
@@ -684,6 +773,63 @@ def live_synthesis(client: AgnesClient, real: dict, research: dict, days: int,
             )})
             time.sleep(0.8)
     raise RuntimeError(f"synthesis returned unparseable JSON: {last_err}")
+
+
+# ------------------------------------------------------------------ #
+# Market context (index + sector relative move) and peers
+# ------------------------------------------------------------------ #
+
+# Yahoo sector name -> SPDR sector ETF, so we can show how the stock moved
+# relative to its own corner of the market.
+SECTOR_ETF = {
+    "Technology": "XLK",
+    "Financial Services": "XLF",
+    "Healthcare": "XLV",
+    "Consumer Cyclical": "XLY",
+    "Consumer Defensive": "XLP",
+    "Energy": "XLE",
+    "Industrials": "XLI",
+    "Basic Materials": "XLB",
+    "Utilities": "XLU",
+    "Real Estate": "XLRE",
+    "Communication Services": "XLC",
+}
+
+
+def _market_context(real: dict) -> Optional[dict]:
+    """How the stock moved today versus the S&P 500 and its sector ETF."""
+    stock_chg = _num(real.get("change_pct"))
+    if stock_chg is None:
+        return None
+    sector = (real.get("sector") or "").strip()
+    out: dict = {"stock_change_pct": stock_chg}
+
+    idx = get_quick_quote("^GSPC")
+    if idx and idx.get("change_pct") is not None:
+        out["index"] = {"name": "S&P 500", "change_pct": idx["change_pct"]}
+        out["vs_index"] = round(stock_chg - idx["change_pct"], 2)
+
+    etf = SECTOR_ETF.get(sector)
+    if etf:
+        sq = get_quick_quote(etf)
+        if sq and sq.get("change_pct") is not None:
+            out["sector"] = {"name": sector, "etf": etf, "change_pct": sq["change_pct"]}
+            out["vs_sector"] = round(stock_chg - sq["change_pct"], 2)
+
+    return out if ("index" in out or "sector" in out) else None
+
+
+def _peer_quotes(peers: list, limit: int = 5) -> list:
+    """Fetch quick day-change quotes for peer tickers, in parallel."""
+    syms = [p for p in (peers or []) if isinstance(p, str)][:limit]
+    if not syms:
+        return []
+    out = []
+    with ThreadPoolExecutor(max_workers=len(syms)) as pool:
+        for q in pool.map(get_quick_quote, syms):
+            if q:
+                out.append(q)
+    return out
 
 
 # ------------------------------------------------------------------ #
@@ -770,9 +916,22 @@ def run_research(real: dict, topic: str, days: int, quick: bool, progress=None) 
                "query": sym, "count": len(data), "error": False})
         return ("finnhub", data)
 
+    def _market():
+        # Relative move vs the S&P 500 and the stock's sector ETF.
+        return ("market", _market_context(real))
+
+    def _youtube():
+        _emit({"type": "search_start", "tool": "youtube", "query": sym})
+        video = recommend_video(sym, name)
+        _emit({"type": "search_done", "tool": "youtube",
+               "query": sym, "count": 1 if video else 0, "error": False})
+        return ("youtube", video)
+
     grouped = {"news": [], "events": {}, "web": [], "reddit": [],
-               "google_news": [], "stocktwits": [], "sec": [], "finnhub": {}}
-    tasks = (_news, _events, _web, _reddit, _google_news, _stocktwits, _sec, _finnhub)
+               "google_news": [], "stocktwits": [], "sec": [], "finnhub": {},
+               "market": None, "youtube": None}
+    tasks = (_news, _events, _web, _reddit, _google_news, _stocktwits, _sec,
+             _finnhub, _market, _youtube)
     with ThreadPoolExecutor(max_workers=len(tasks)) as pool:
         futures = [pool.submit(fn) for fn in tasks]
         for fut in as_completed(futures):
@@ -814,9 +973,11 @@ def _build_feed(research: dict) -> list:
     seen_titles, seen_urls = set(), set()
 
     def _lane(platform, rows):
-        """rows: iterable of (title, url, label, age, age_days). Deduped."""
+        """rows: iterable of (title, url, label, age, age_days, extras?). Deduped."""
         out = []
-        for title, url, label, age, age_days in rows:
+        for row in rows:
+            title, url, label, age, age_days = row[:5]
+            extras = row[5] if len(row) > 5 else {}
             title = (title or "").strip()
             url = (url or "").strip()
             if not title or not url:
@@ -826,7 +987,7 @@ def _build_feed(research: dict) -> list:
                 continue
             seen_titles.add(nt)
             seen_urls.add(url)
-            out.append({
+            item = {
                 "platform": platform,
                 "label": label or PLATFORM_META[platform][0],
                 "kind": PLATFORM_META[platform][1],
@@ -834,7 +995,10 @@ def _build_feed(research: dict) -> list:
                 "url": url,
                 "age": age or "",
                 "age_days": age_days,
-            })
+            }
+            if extras:
+                item.update(extras)
+            out.append(item)
         return out
 
     def _st_label(m):
@@ -842,19 +1006,38 @@ def _build_feed(research: dict) -> list:
         sent = m.get("sentiment")
         return ("@" + user if user else "StockTwits") + (f" · {sent}" if sent else "")
 
+    def _snippet(text, limit=200):
+        if not text:
+            return ""
+        s = text.strip()
+        return s[:limit] + ("…" if len(s) > limit else "")
+
     lanes = [
-        _lane("yahoo", ((n.get("title"), n.get("url"), n.get("publisher"), n.get("age"), n.get("age_days"))
-                        for n in (research.get("news") or [])[:6])),
-        _lane("google_news", ((n.get("title"), n.get("url"), n.get("publisher"), n.get("age"), n.get("age_days"))
-                              for n in (research.get("google_news") or [])[:6])),
-        _lane("sec", ((f.get("title"), f.get("url"), f.get("form"), f.get("age"), f.get("age_days"))
-                      for f in (research.get("sec") or [])[:3])),
-        _lane("stocktwits", ((m.get("title"), m.get("url"), _st_label(m), m.get("age"), m.get("age_days"))
-                             for m in (research.get("stocktwits") or [])[:3])),
-        _lane("reddit", ((r.get("title"), r.get("url"), r.get("subreddit"), r.get("age"), r.get("age_days"))
-                         for r in (research.get("reddit") or [])[:3])),
-        _lane("web", ((w.get("title"), w.get("url"), w.get("site_name"), w.get("age"), None)
-                      for w in (research.get("web") or [])[:4])),
+        _lane("yahoo", (
+            (n.get("title"), n.get("url"), n.get("publisher"), n.get("age"), n.get("age_days"),
+             {"summary": _snippet(n.get("summary"))})
+            for n in (research.get("news") or [])[:6])),
+        _lane("google_news", (
+            (n.get("title"), n.get("url"), n.get("publisher"), n.get("age"), n.get("age_days"),
+             {"summary": _snippet(n.get("summary"))})
+            for n in (research.get("google_news") or [])[:6])),
+        _lane("sec", (
+            (f.get("title"), f.get("url"), f.get("form"), f.get("age"), f.get("age_days"),
+             {"form_type": f.get("form"), "summary": _snippet(f.get("description") or f.get("summary"))})
+            for f in (research.get("sec") or [])[:3])),
+        _lane("stocktwits", (
+            (m.get("title"), m.get("url"), _st_label(m), m.get("age"), m.get("age_days"),
+             {"sentiment": m.get("sentiment"), "summary": _snippet(m.get("body") or m.get("title"))})
+            for m in (research.get("stocktwits") or [])[:3])),
+        _lane("reddit", (
+            (r.get("title"), r.get("url"), r.get("subreddit"), r.get("age"), r.get("age_days"),
+             {"upvotes": r.get("upvotes"), "num_comments": r.get("num_comments"),
+              "summary": _snippet(r.get("selftext") or r.get("body"))})
+            for r in (research.get("reddit") or [])[:3])),
+        _lane("web", (
+            (w.get("title"), w.get("url"), w.get("site_name"), w.get("age"), None,
+             {"summary": _snippet(w.get("description"))})
+            for w in (research.get("web") or [])[:4])),
     ]
 
     feed, depth = [], 0
@@ -931,31 +1114,195 @@ def _model_label(client) -> str:
 # ------------------------------------------------------------------ #
 
 def _offline_essay(real: dict, digest: dict, research: dict) -> str:
-    """Deterministic 2-paragraph narrative from already-computed digest fields."""
+    """Multi-paragraph narrative built from verified data when the AI backend is unavailable."""
     snap = digest.get("snapshot") or {}
     name = snap.get("name") or real.get("name") or real.get("symbol", "")
+    symbol = real.get("symbol", "")
+
+    price = _num(real.get("price"))
+    change = _num(real.get("change"))
+    chg_pct = _num(real.get("change_pct"))
+    high52 = _num(real.get("52w_high"))
+    low52 = _num(real.get("52w_low"))
+    sector = (real.get("sector") or "").strip()
+    market_cap = _num(real.get("market_cap"))
+
     tldr = (digest.get("tldr") or "").strip()
     action = digest.get("action") or {}
+    signal = (action.get("signal") or "HOLD").upper()
     reason = (action.get("reasoning") or "").strip()
-    bull = (digest.get("bull_case") or {}).get("outlook", "").strip()
-    bear = (digest.get("bear_case") or {}).get("outlook", "").strip()
-    news_n = len(research.get("news") or [])
+    drivers = [d for d in (digest.get("drivers") or []) if d]
 
-    p1 = tldr or f"Here is where {name} stands today."
-    if news_n:
-        p1 += f" Across the sources we checked, {news_n} recent news items are shaping the story."
-    p2_bits = []
-    if bull:
-        p2_bits.append(bull)
-    if bear:
-        p2_bits.append(bear)
-    if reason:
-        p2_bits.append(f"For now, the read is {action.get('signal', 'HOLD')}: {reason}")
-    p2 = " ".join(p2_bits)
-    return (p1 + "\n\n" + p2).strip()
+    bull_d = digest.get("bull_case") or {}
+    bear_d = digest.get("bear_case") or {}
+    bull_text = (bull_d.get("outlook") or bull_d.get("body") or "").strip()
+    bull_level = _num(bull_d.get("level_to_watch"))
+    bear_text = (bear_d.get("outlook") or bear_d.get("body") or "").strip()
+    bear_level = _num(bear_d.get("level_to_watch"))
+
+    kl = (snap.get("key_levels") or {})
+    support = _num(kl.get("support"))
+    resistance = _num(kl.get("resistance"))
+
+    position = digest.get("position")
+
+    def _clean_name(n):
+        return n.rstrip(".")
+
+    all_news = [(n.get("title", ""), n.get("publisher", ""), n.get("summary", ""))
+                for n in ((research.get("news") or []) + (research.get("google_news") or []))[:6]
+                if n.get("title")]
+    sec_items = [(f.get("title", ""), f.get("form", ""))
+                 for f in (research.get("sec") or [])[:2] if f.get("title")]
+
+    paragraphs = []
+
+    # ── Paragraph 1: what is happening right now ──
+    # Use AI-written tldr only when it is substantive (> 150 chars = real AI content).
+    # The offline synthesis produces a short 2-3 sentence stub — skip that and build from data.
+    if tldr and len(tldr) > 150:
+        p1 = tldr
+    else:
+        direction = "up" if (chg_pct or 0) >= 0 else "down"
+        pct_abs = abs(chg_pct or 0)
+        p1 = f"{_clean_name(name)} ({symbol}) is {direction} {pct_abs:.1f}% today"
+        if price:
+            p1 += f", trading at ${price:,.2f}"
+        p1 += "."
+        if high52 and low52 and price and high52 != low52:
+            pct_of_range = (price - low52) / (high52 - low52) * 100
+            if pct_of_range >= 80:
+                p1 += (f" At ${price:,.2f}, the stock sits near the top of its 52-week range"
+                       f" (${low52:,.2f}–${high52:,.2f}), which reflects a strong run over the past year.")
+            elif pct_of_range <= 20:
+                p1 += (f" At ${price:,.2f}, the stock is near the bottom of its 52-week range"
+                       f" (${low52:,.2f}–${high52:,.2f}), reflecting a difficult year.")
+            else:
+                p1 += (f" The 52-week range is ${low52:,.2f}–${high52:,.2f},"
+                       f" so the stock sits in the middle — not a breakout in either direction.")
+        if sector:
+            p1 += f" {_clean_name(name)} operates in the {sector} sector."
+        if market_cap and market_cap > 0:
+            if market_cap >= 1e12:
+                cap_str = f"${market_cap / 1e12:.1f} trillion"
+            elif market_cap >= 1e9:
+                cap_str = f"${market_cap / 1e9:.1f} billion"
+            else:
+                cap_str = f"${market_cap / 1e6:.0f} million"
+            p1 += f" The company is worth about {cap_str} in total."
+    paragraphs.append(p1)
+
+    # ── How the move compares to the market and the sector ──
+    market = digest.get("market") or {}
+    mbits = []
+    if market.get("index") and market.get("vs_index") is not None:
+        ic = market["index"]["change_pct"]; vi = market["vs_index"]
+        idir = "up" if ic >= 0 else "down"
+        if abs(vi) < 0.3:
+            mbits.append(f"The move roughly tracks the wider market, with the S&P 500 {idir} {abs(ic):.1f}% today.")
+        else:
+            mbits.append(f"That is {'stronger than' if vi > 0 else 'weaker than'} the wider market, where the S&P 500 is {idir} {abs(ic):.1f}% today.")
+    if market.get("sector") and market.get("vs_sector") is not None:
+        sec = market["sector"]; sc = sec["change_pct"]; vs = market["vs_sector"]
+        sdir = "up" if sc >= 0 else "down"
+        mbits.append(f"Its {sec['name']} sector is {sdir} {abs(sc):.1f}% today, so the stock is {'ahead of' if vs > 0 else 'behind'} its peers in the group.")
+    if mbits:
+        paragraphs.append(" ".join(mbits))
+
+    # ── Paragraph 2: what is driving the move ──
+    if drivers or reason:
+        bits = []
+        if drivers:
+            bits.append("The main forces behind the current move: " + "; ".join(d.rstrip(".") for d in drivers[:3]) + ".")
+        if reason:
+            bits.append(reason)
+        paragraphs.append(" ".join(bits))
+
+    # ── Paragraph 3: what the news is saying ──
+    if all_news:
+        p3 = f"Here is what the latest coverage is saying about {_clean_name(name)}. "
+        news_parts = []
+        for title, pub, summary in all_news[:4]:
+            part = f'"{title}"'
+            if pub:
+                part += f" ({pub})"
+            if summary:
+                first_sent = summary.split(". ")[0].strip().rstrip(".")
+                if len(first_sent) > 20:
+                    part += f" — {first_sent}."
+            else:
+                part += "."
+            news_parts.append(part)
+        p3 += " ".join(news_parts)
+        if sec_items:
+            title_s, form_s = sec_items[0]
+            form_label = f"{form_s} filing" if form_s else "filing"
+            p3 += f" On the regulatory side, there is a recent SEC {form_label}: {_clean_name(title_s)}."
+        paragraphs.append(p3)
+
+    # ── Paragraph 4: bull and bear cases ──
+    if bull_text or bear_text:
+        bits = []
+        if bull_text:
+            bull_has_level = bull_level and f"{bull_level:,.2f}" in bull_text
+            bits.append(f"On the optimistic side: {bull_text}")
+            if bull_level and not bull_has_level:
+                bits[-1] += f" Watch for a move above ${bull_level:,.2f} as a bullish signal."
+        if bear_text:
+            bear_has_level = bear_level and f"{bear_level:,.2f}" in bear_text
+            bits.append(f"The main risk to watch: {bear_text}")
+            if bear_level and not bear_has_level:
+                bits[-1] += f" A drop below ${bear_level:,.2f} would be a warning sign."
+        paragraphs.append(" ".join(bits))
+
+    # ── Paragraph 5: what this means for you ──
+    if position:
+        shares = _num(position.get("shares")) or 0
+        cb = _num(position.get("cost_basis"))
+        gain_pct = _num(position.get("gain_pct"))
+        gain_amt = _num(position.get("gain"))
+        day_val = _num(position.get("day_change_value"))
+
+        p5 = f"You own {shares:.0f} shares of {_clean_name(name)}."
+        if cb and price:
+            direction_word = "up" if (gain_amt or 0) >= 0 else "down"
+            p5 += (f" You bought at ${cb:,.2f}, and at today's price of ${price:,.2f}"
+                   f" your position is {direction_word} ${abs(gain_amt or 0):,.0f}")
+            if gain_pct is not None:
+                p5 += f" ({abs(gain_pct):.1f}%)"
+            p5 += "."
+        if day_val is not None and day_val != 0:
+            word = "added" if day_val >= 0 else "shaved off"
+            p5 += f" Today's {abs(chg_pct or 0):.1f}% move {word} ${abs(day_val):,.0f} from your position."
+        if support and resistance:
+            p5 += (f" Key levels: support around ${support:,.2f},"
+                   f" resistance around ${resistance:,.2f}.")
+        paragraphs.append(p5)
+    elif support and resistance:
+        p5 = (f"For anyone watching this stock, the key price levels to track are"
+              f" support around ${support:,.2f} and resistance around ${resistance:,.2f}."
+              f" The overall signal is {signal}.")
+        paragraphs.append(p5)
+
+    # ── The next catalyst on the calendar ──
+    earn = digest.get("next_earnings")
+    if earn and earn.get("days") is not None:
+        d = earn["days"]
+        if d < 0:
+            cal = f"The most recent earnings report was on {earn['date']}, so the next set of numbers is the thing to watch from here."
+        elif d == 0:
+            cal = f"Earnings are due today ({earn['date']}), which can move the price sharply in either direction, so size any decision accordingly."
+        elif d <= 14:
+            cal = f"The next earnings report is only {d} day{'s' if d != 1 else ''} away, on {earn['date']}. That is the next big test, and the price often gets choppy heading into it."
+        else:
+            cal = f"The next earnings report is on {earn['date']}, about {d} days out, so there is room to run before that test arrives."
+        paragraphs.append(cal)
+
+    return "\n\n".join(p for p in paragraphs if p.strip())
 
 
-def stream_essay(client, real: dict, digest: dict, research: dict, progress=None) -> str:
+def stream_essay(client, real: dict, digest: dict, research: dict,
+                 days: int = 30, progress=None) -> str:
     """Stream a plain-English narrative of the current situation.
 
     Emits essay_start / essay_chunk / essay_done progress events as text arrives,
@@ -972,54 +1319,144 @@ def stream_essay(client, real: dict, digest: dict, research: dict, progress=None
     sentiment = (stocktwits_sentiment(research.get("stocktwits") or [])
                  if research.get("stocktwits") else None)
     position = digest.get("position")
+
+    def _news_items(items, limit):
+        out = []
+        for n in (items or [])[:limit]:
+            if not n.get("title"):
+                continue
+            entry = {"title": n["title"]}
+            if n.get("summary"):
+                entry["summary"] = n["summary"]
+            if n.get("age"):
+                entry["age"] = n["age"]
+            if n.get("publisher"):
+                entry["publisher"] = n["publisher"]
+            out.append(entry)
+        return out
+
+    def _web_items(items, limit):
+        out = []
+        for w in (items or [])[:limit]:
+            if not w.get("title"):
+                continue
+            entry = {"title": w["title"]}
+            if w.get("description"):
+                entry["snippet"] = w["description"]
+            out.append(entry)
+        return out
+
+    finnhub = research.get("finnhub") or {}
     facts = {
-        "name": real.get("name"), "symbol": real.get("symbol"),
-        "price": real.get("price"), "change_pct": real.get("change_pct"),
-        "week52_high": real.get("52w_high"), "week52_low": real.get("52w_low"),
+        "name": real.get("name"),
+        "symbol": real.get("symbol"),
+        "price": real.get("price"),
+        "change_pct": real.get("change_pct"),
+        "week52_high": real.get("52w_high"),
+        "week52_low": real.get("52w_low"),
+        "sector": real.get("sector"),
+        "market_cap": real.get("market_cap"),
         "tldr": digest.get("tldr"),
         "signal": (digest.get("action") or {}).get("signal"),
+        "signal_reason": (digest.get("action") or {}).get("reason"),
         "drivers": digest.get("drivers"),
-        "news": [n.get("title") for n in (research.get("news") or [])[:10] if n.get("title")],
+        "bull_case": (digest.get("bull") or {}).get("body"),
+        "bear_case": (digest.get("bear") or {}).get("body"),
+        # Rich news with summaries so Gemini can cite specific facts
+        "yahoo_news": _news_items(research.get("news"), 12),
+        "google_news": _news_items(research.get("google_news"), 10),
+        "web_search_results": _web_items(research.get("web"), 8),
+        "sec_filings": [
+            {"title": f.get("title"), "form": f.get("form"), "age": f.get("age")}
+            for f in (research.get("sec") or [])[:6] if f.get("title")
+        ],
         "retail_sentiment": sentiment,
-        "filings": [f.get("title") for f in (research.get("sec") or [])[:5] if f.get("title")],
-        "analyst_consensus": (research.get("finnhub") or {}).get("analyst"),
-        "analyst_price_target": (research.get("finnhub") or {}).get("price_target"),
-        "earnings_beat_rate": ((research.get("finnhub") or {}).get("earnings") or {}).get("beat_rate"),
-        "insider_activity": (research.get("finnhub") or {}).get("insider"),
-        "financial_ratios": (research.get("finnhub") or {}).get("ratios"),
+        # Analyst & financial data
+        "analyst_consensus": finnhub.get("analyst"),
+        "analyst_price_target": finnhub.get("price_target"),
+        "earnings_history": finnhub.get("earnings"),
+        "insider_activity": finnhub.get("insider"),
+        "financial_ratios": finnhub.get("ratios"),
         "your_position": ({"shares": position.get("shares"),
                            "avg_buy_price": position.get("cost_basis"),
+                           "current_value": position.get("value"),
                            "gain_pct": position.get("gain_pct")} if position else None),
+        # Phase 2 context: relative move, analyst trend, peers, earnings countdown.
+        "market_context": research.get("market"),
+        "analyst_trend": (finnhub.get("rec_trend") or {}).get("direction"),
+        "peer_tickers": finnhub.get("peers"),
+        "next_earnings": _earnings_countdown(research.get("events", {})),
     }
-    pos_line = ("The reader OWNS this stock (see your_position) — speak directly to "
-                "what their gain/loss and the news mean for them. "
+
+    window_label = (
+        "today only (past 24 hours)" if days == 1
+        else f"the past {days} days"
+    )
+    pos_line = ("The reader OWNS this stock (see your_position). Speak directly to "
+                "what their gain or loss and the news mean for them specifically. "
                 if position else "")
+
     messages = [
         {"role": "system", "content": ESSAY_PROMPT},
         {"role": "user", "content": (
-            f"As of {datetime.now().strftime('%B %d, %Y')}, write the essay for "
-            f"{real.get('name')} ({real.get('symbol')}). {pos_line}\n\n"
-            f"VERIFIED DATA (use only these numbers):\n{json.dumps(facts, ensure_ascii=False)}"
+            f"Write the full essay for {real.get('name')} ({real.get('symbol')}).\n"
+            f"Date: {datetime.now().strftime('%B %d, %Y')}. "
+            f"Research window: {window_label}.\n"
+            f"{pos_line}\n\n"
+            f"Use ALL of the following research to write a deep, detailed essay. "
+            f"The yahoo_news, google_news, and web_search_results fields contain real "
+            f"headlines and summaries. Cite specific articles and their key facts.\n\n"
+            f"VERIFIED DATA:\n{json.dumps(facts, ensure_ascii=False, indent=2)}"
         )},
     ]
 
     emit({"type": "essay_start"})
     chunks = []
+    offline_note = None
     if client is not None and hasattr(client, "chat_stream"):
-        deadline = time.time() + 60
+        deadline = time.time() + 120  # longer deadline for deep essay
         try:
-            for piece in client.chat_stream(messages, max_tokens=1200, temperature=0.4):
+            for piece in client.chat_stream(messages, max_tokens=2500, temperature=0.4):
                 chunks.append(piece)
                 emit({"type": "essay_chunk", "text": piece})
                 if time.time() > deadline:
                     break
-        except Exception:
+        except Exception as e:
+            import traceback
+            print(f"[essay] stream error: {type(e).__name__}: {e}\n{traceback.format_exc()}", flush=True)
+            try:
+                import requests as _req
+                if isinstance(e, _req.exceptions.HTTPError) and getattr(e, "response", None) is not None:
+                    code = e.response.status_code
+                    try:
+                        body = e.response.json()
+                        api_msg = (body[0]["error"]["message"] if isinstance(body, list)
+                                   else (body.get("error") or {}).get("message", ""))
+                    except Exception:
+                        api_msg = ""
+                    if "depleted" in api_msg.lower() or "billing" in api_msg.lower():
+                        offline_note = "AI credits depleted. This summary uses verified market data only. Top up at aistudio.google.com to restore AI-written essays."
+                    elif code == 429:
+                        offline_note = "AI rate limit hit. This summary uses verified market data only. Try again in a minute."
+                    else:
+                        offline_note = f"AI unavailable (HTTP {code}). Showing data-driven offline summary."
+                else:
+                    offline_note = "AI unavailable. This summary uses verified market data only."
+            except Exception:
+                offline_note = "AI unavailable. Showing data-driven offline summary."
+            emit({"type": "status", "message": offline_note})
             chunks = []
+    elif client is None:
+        offline_note = "No AI backend configured. Showing data-driven offline summary."
 
     full = "".join(chunks).strip()
     if not full:
-        full = _offline_essay(real, digest, research)
+        full = _strip_dashes(_offline_essay(real, digest, research))
+        if offline_note:
+            emit({"type": "essay_note", "text": offline_note})
         emit({"type": "essay_chunk", "text": full})
+    else:
+        full = _strip_dashes(full)
     emit({"type": "essay_done", "text": full})
     return full
 
@@ -1085,6 +1522,10 @@ def build_digest(symbol: str, days: int = 30, topic: str = None, quick: bool = F
     else:
         digest = offline_synthesis(real, research)
 
+    # Strip em/en dashes from all synthesized prose (live and offline) so the
+    # brief does not read as AI-written.
+    _clean_digest_text(digest)
+
     # 4. Attach research outputs + decision panels the UI renders directly. The
     #    unified feed merges every source with per-item platform attribution;
     #    `news` is kept (Yahoo) for back-compat.
@@ -1096,6 +1537,13 @@ def build_digest(symbol: str, days: int = 30, topic: str = None, quick: bool = F
     digest["risk"] = _build_risk(real, history)
     digest["income"] = _build_income(real, research.get("events", {}), position)
     digest["finnhub"] = research.get("finnhub") or {}
+
+    # Phase 2 enrichment: relative market move, peer tickers, an explainer video.
+    digest["market"] = research.get("market")
+    digest["video"] = research.get("youtube")
+    peers = (research.get("finnhub") or {}).get("peers")
+    digest["peers"] = _peer_quotes(peers) if peers else []
+    digest["next_earnings"] = _earnings_countdown(research.get("events", {}))
 
     digest["history"] = history
     digest["meta"] = {
@@ -1115,7 +1563,7 @@ def build_digest(symbol: str, days: int = 30, topic: str = None, quick: bool = F
     #    is emitted so the brief renders immediately and the essay types in below.
     if want_essay:
         try:
-            digest["essay"] = stream_essay(client, real, digest, research, progress=progress)
+            digest["essay"] = stream_essay(client, real, digest, research, days=days, progress=progress)
         except Exception as e:
             emit({"type": "status", "message": f"Essay skipped: {e}"})
 
@@ -1199,6 +1647,19 @@ def _reddit_filter_label(days: int) -> str:
     return "all time"
 
 
+def _earnings_countdown(events: dict) -> Optional[dict]:
+    """Days until the next earnings report, parsed from the events block."""
+    raw = (events or {}).get("earnings_date")
+    if not raw:
+        return None
+    try:
+        ds = str(raw)[:10]
+        d = datetime.strptime(ds, "%Y-%m-%d").date()
+    except Exception:
+        return None
+    return {"date": ds, "days": (d - datetime.now().date()).days}
+
+
 def _watch_list(events: dict, real: dict) -> list:
     """Build the 'things to watch this week' bullets from yfinance events."""
     out = []
@@ -1212,7 +1673,7 @@ def _watch_list(events: dict, real: dict) -> list:
     low = real.get("52w_low")
     price = real.get("price")
     if price and high and price >= 0.95 * high:
-        out.append(f"Price is within 5% of the 12-month high (${high:,.2f}) — watch for resistance.")
+        out.append(f"Price is within 5% of the 12-month high (${high:,.2f}). Watch for resistance.")
     elif price and low and price <= 1.05 * low:
-        out.append(f"Price is within 5% of the 12-month low (${low:,.2f}) — watch for support.")
+        out.append(f"Price is within 5% of the 12-month low (${low:,.2f}). Watch for support.")
     return out

@@ -124,6 +124,45 @@ def get_ticker_data(symbol: str, days: int = 90) -> Dict[str, Any]:
     }
 
 
+def get_quick_quote(symbol: str) -> Optional[Dict[str, Any]]:
+    """Lightweight price + day-change for a symbol, no history or full info.
+
+    Used for index/sector/peer context where only the day move matters. Uses
+    yfinance fast_info, which is much cheaper than the full .info call.
+    """
+    if not symbol or not symbol.strip():
+        return None
+    try:
+        t = _yfinance().Ticker(symbol.upper())
+        with _silence_streams():
+            fi = t.fast_info
+
+            def _g(*names):
+                for n in names:
+                    v = None
+                    try:
+                        v = fi[n]
+                    except Exception:
+                        v = getattr(fi, n, None)
+                    if v:
+                        return float(v)
+                return None
+
+            price = _g("lastPrice", "last_price")
+            prev = _g("previousClose", "previous_close")
+    except Exception:
+        return None
+    if not price or not prev:
+        return None
+    change = price - prev
+    return {
+        "symbol": symbol.upper(),
+        "price": round(price, 2),
+        "change": round(change, 2),
+        "change_pct": round(change / prev * 100, 2),
+    }
+
+
 def search_tickers(query: str, limit: int = 6) -> List[Dict[str, Any]]:
     """Search for ticker symbols matching a company name or keyword."""
     try:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agnes Finance Research - web backend."""
+"""Tickr - web backend."""
 
 import asyncio
 import json
@@ -33,7 +33,7 @@ from lib.yahoo_finance import get_ticker_data, search_tickers
 STATIC_DIR = Path(__file__).parent / "static"
 DEMO_DIR = STATIC_DIR / "demo"
 
-app = FastAPI(title="Agnes Finance Research")
+app = FastAPI(title="Tickr")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 

@@ -1,6 +1,6 @@
-# Agnes Investor Desk
+# Tickr
 
-A personal, on-device dashboard for everyday investors. Save the stocks you hold,
+A personal dashboard for everyday investors. Save the stocks you hold,
 then get a plain-English read on each one — what's happening, what it means for
 your position, and the latest news from every source — all in one place.
 

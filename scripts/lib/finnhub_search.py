@@ -169,6 +169,48 @@ def get_basic_financials(symbol: str) -> Optional[dict]:
     return result or None
 
 
+def get_company_peers(symbol: str, limit: int = 6) -> Optional[list]:
+    """Peer tickers in the same sector/industry (Finnhub /stock/peers)."""
+    data = _get("/stock/peers", {"symbol": symbol})
+    if not data or not isinstance(data, list):
+        return None
+    peers = [p for p in data if isinstance(p, str) and p.upper() != symbol.upper()]
+    return peers[:limit] or None
+
+
+def get_recommendation_trend(symbol: str) -> Optional[dict]:
+    """How the analyst consensus has shifted over the last few months.
+
+    Returns a direction (improving / steady / weakening) plus the raw monthly
+    buy/hold/sell counts so the UI can show the trend, not just a snapshot.
+    """
+    data = _get("/stock/recommendation", {"symbol": symbol})
+    if not data or not isinstance(data, list) or len(data) < 2:
+        return None
+
+    def _score(rec):
+        sb, b, h, s, ss = (rec.get(k, 0) for k in ("strongBuy", "buy", "hold", "sell", "strongSell"))
+        total = sb + b + h + s + ss
+        return ((sb * 5 + b * 4 + h * 3 + s * 2 + ss * 1) / total) if total else None  # 1..5
+
+    cur = _score(data[0])
+    prev = _score(data[min(2, len(data) - 1)])
+    if cur is None or prev is None:
+        return None
+    delta = cur - prev
+    direction = "improving" if delta > 0.15 else "weakening" if delta < -0.15 else "steady"
+    return {
+        "direction": direction,
+        "current_period": data[0].get("period", ""),
+        "months": [
+            {"period": r.get("period", ""), "strong_buy": r.get("strongBuy", 0),
+             "buy": r.get("buy", 0), "hold": r.get("hold", 0),
+             "sell": r.get("sell", 0), "strong_sell": r.get("strongSell", 0)}
+            for r in data[:3]
+        ],
+    }
+
+
 # ------------------------------------------------------------------ #
 # Combined call (used by run_research)
 # ------------------------------------------------------------------ #
@@ -193,4 +235,10 @@ def get_finnhub_analytics(symbol: str, current_price: float = None) -> dict:
     ratios = get_basic_financials(symbol)
     if ratios:
         result["ratios"] = ratios
+    peers = get_company_peers(symbol)
+    if peers:
+        result["peers"] = peers
+    trend = get_recommendation_trend(symbol)
+    if trend:
+        result["rec_trend"] = trend
     return result

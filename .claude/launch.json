@@ -3,9 +3,11 @@
   "configurations": [
     {
       "name": "agnes",
-      "runtimeExecutable": "/Users/matth/Documents/agnes_finance/.venv/bin/python",
-      "runtimeArgs": ["/Users/matth/Documents/agnes_finance/web/app.py"],
-      "port": 3005
+      "runtimeExecutable": "/Users/matth/Documents/agnes_finance/.venv/bin/uvicorn",
+      "runtimeArgs": ["app:app", "--port", "3005", "--log-level", "warning"],
+      "cwd": "/Users/matth/Documents/agnes_finance/web",
+      "port": 3005,
+      "autoPort": false
     }
   ]
 }

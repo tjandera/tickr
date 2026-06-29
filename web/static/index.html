@@ -3,41 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agnes / Stock Brief</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0d10'/%3E%3Ccircle cx='16' cy='16' r='6.5' fill='%23f4b740'/%3E%3C/svg%3E">
+<title>Tickr</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='19' fill='white'%3ET%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* ── Design tokens (dark default — photoAI-aligned) ── */
 :root {
-  --ink:        #0c0d10;
-  --ink2:       #121319;
-  --panel:      #16171e;
-  --panel2:     #1b1d26;
-  --line:       #25262f;
-  --line2:      #33343f;
-  --paper:      #ece6d8;
-  --paper-dim:  #a7a293;
-  --muted:      #6f6c63;
-  --faint:      #4a4843;
+  --ink:        #111113;
+  --ink2:       #1C1C1E;
+  --panel:      #1C1C1E;
+  --panel2:     #242426;
+  --line:       #2C2C2E;
+  --line2:      #3A3A3C;
+  --paper:      #F5F5F7;
+  --paper-dim:  #D1D1D6;
+  --muted:      #A1A1A6;
+  --faint:      #7D7D83;
 
-  --accent:     #f4b740;
-  --accent-deep:#caa233;
-  --accent-glow: rgba(244,183,64,.16);
+  --accent:     #0A84FF;
+  --accent-deep:#0066CC;
+  --accent-glow: rgba(10,132,255,.18);
 
-  --up:         #4fb286;
-  --up-soft:    rgba(79,178,134,.14);
-  --down:       #d0635f;
-  --down-soft:  rgba(208,99,95,.14);
-  --amber:      #d9a441;
-  --amber-soft: rgba(217,164,65,.12);
-  --slate:      #8c8a82;
+  --up:         #30D158;
+  --up-soft:    rgba(48,209,88,.14);
+  --down:       #FF453A;
+  --down-soft:  rgba(255,69,58,.14);
+  --amber:      #FFD60A;
+  --amber-soft: rgba(255,214,10,.12);
+  --slate:      #8E8E93;
 
-  --serif:  'Fraunces', Georgia, 'Times New Roman', serif;
-  --sans:   'Spline Sans', system-ui, sans-serif;
-  --mono:   'JetBrains Mono', ui-monospace, monospace;
+  --sans:   "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --serif:  ui-serif, "New York", Georgia, serif;
+  --mono:   ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 18px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.45);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.45);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.50);
+
+  --t-fast: 150ms;
+  --t-med:  250ms;
+  --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
 
   --maxw: 1180px;
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] {
+  --ink:        #FFFFFF;
+  --ink2:       #F5F5F7;
+  --panel:      #FFFFFF;
+  --panel2:     #F5F5F7;
+  --line:       #E8E8ED;
+  --line2:      #D2D2D7;
+  --paper:      #1D1D1F;
+  --paper-dim:  #424245;
+  --muted:      #6E6E73;
+  --faint:      #86868B;
+
+  --accent:     #0066CC;
+  --accent-deep:#0040A0;
+  --accent-glow: rgba(0,102,204,.12);
+
+  --up:         #34C759;
+  --up-soft:    rgba(52,199,89,.14);
+  --down:       #FF3B30;
+  --down-soft:  rgba(255,59,48,.14);
+  --amber:      #FF9F0A;
+  --amber-soft: rgba(255,159,10,.12);
+  --slate:      #8E8E93;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.12);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,15 +103,21 @@ body::before {
   content: "";
   position: fixed; inset: 0; z-index: -2;
   background:
-    radial-gradient(1100px 620px at 78% -8%, rgba(244,183,64,.07), transparent 60%),
-    radial-gradient(900px 700px at -10% 110%, rgba(79,178,134,.045), transparent 55%),
-    linear-gradient(180deg, #0c0d10 0%, #0a0b0e 100%);
+    radial-gradient(1100px 620px at 78% -8%, var(--accent-glow), transparent 60%),
+    radial-gradient(900px 700px at -10% 110%, var(--up-soft), transparent 55%),
+    var(--ink);
+  transition: background var(--t-med) var(--ease-out);
+}
+[data-theme="light"] body::before {
+  background: var(--ink);
 }
 body::after {
   content: "";
-  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+  transition: opacity var(--t-med);
 }
+[data-theme="light"] body::after { opacity: 0; }
 
 ::selection { background: var(--accent-glow); color: #fff; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
@@ -79,31 +129,56 @@ body::after {
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
 
 /* ─────────── Masthead ─────────── */
+html { transition: background-color var(--t-med) var(--ease-out), color var(--t-med) var(--ease-out); }
+
 .masthead {
   position: sticky; top: 0; z-index: 200;
-  background: rgba(10,11,14,.82);
-  backdrop-filter: blur(16px) saturate(120%);
+  background: rgba(17,17,19,.82);
+  backdrop-filter: blur(20px) saturate(160%);
   border-bottom: 1px solid var(--line);
+  transition: background var(--t-med) var(--ease-out), border-color var(--t-med);
+}
+[data-theme="light"] .masthead {
+  background: rgba(255,255,255,.88);
 }
 .masthead-inner {
   max-width: var(--maxw); margin: 0 auto; padding: 13px 28px;
   display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
 }
-.brand { display: flex; align-items: baseline; gap: 11px; flex-shrink: 0; cursor: default; }
-.brand-mark {
-  font-family: var(--serif); font-weight: 600; font-size: 25px; letter-spacing: -.01em;
-  color: var(--paper); line-height: 1;
-  position: relative;
+.brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; cursor: default; }
+.brand-icon {
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+  display: inline-flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 14px; letter-spacing: -.03em;
+  font-family: var(--sans); box-shadow: var(--shadow-sm);
 }
-.brand-mark::after {
-  content: ""; position: absolute; right: -9px; top: 2px;
-  width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 9px var(--accent);
+.brand-mark {
+  font-family: var(--sans); font-weight: 700; font-size: 18px; letter-spacing: -.025em;
+  color: var(--paper); line-height: 1;
 }
 .brand-tag {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .26em;
-  text-transform: uppercase; color: var(--muted); padding-left: 9px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--faint); padding-left: 9px;
   border-left: 1px solid var(--line2);
+}
+
+/* Theme toggle pill */
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  background: var(--ink2); border: 1px solid var(--line2); border-radius: 980px;
+  cursor: pointer; color: var(--muted); flex-shrink: 0;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.theme-toggle:hover { border-color: var(--faint); }
+.theme-toggle .tt-seg {
+  width: 24px; height: 24px; border-radius: 980px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+.theme-toggle .tt-seg.on {
+  background: var(--panel2); color: var(--paper);
+  box-shadow: 0 1px 3px rgba(0,0,0,.4);
 }
 
 .controls { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 280px; flex-wrap: wrap; }
@@ -307,10 +382,15 @@ main { padding-bottom: 80px; }
 .chg.flat { color: var(--slate); }
 .chg .arw { font-size: 11px; }
 
-.essentials { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.ecell { background: var(--ink2); padding: 12px 16px; }
+.snap-intro { font-family: var(--sans); font-size: 12.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+.essentials { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.ecell { background: var(--ink2); padding: 14px 16px; }
 .ecell .ek { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .ecell .ev { font-family: var(--mono); font-size: 15px; color: var(--paper); margin-top: 4px; }
+.ecell .ehint { font-family: var(--sans); font-size: 11px; color: var(--faint); margin-top: 5px; line-height: 1.35; }
+.ecell .e-bar { height: 4px; border-radius: 2px; background: var(--line2); margin-top: 7px; position: relative; overflow: hidden; }
+.ecell .e-bar .e-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px; background: var(--accent); transition: width .6s ease; }
+.ecell .e-bar .e-dot { position: absolute; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); transform: translateX(-50%); border: 2px solid var(--ink2); }
 
 /* Your position band (holding-aware) */
 .position-band {
@@ -334,6 +414,7 @@ main { padding-bottom: 80px; }
 .ri-cell .rk { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: block; }
 .ri-cell .rv { font-family: var(--mono); font-size: 14px; color: var(--paper); margin-top: 3px; display: block; }
 .ri-cell .rv.up { color: var(--up); } .ri-cell .rv.down { color: var(--down); } .ri-cell .rv.muted { color: var(--muted); }
+.ri-cell .rhint { font-family: var(--sans); font-size: 11px; color: var(--faint); margin-top: 4px; line-height: 1.35; }
 @media (max-width: 760px) { .ri-wrap { grid-template-columns: 1fr; } }
 
 .details-toggle {
@@ -343,11 +424,11 @@ main { padding-bottom: 80px; }
 }
 .details-toggle:hover { color: var(--paper-dim); }
 .details-grid {
-  display: none; margin-top: 10px;
+  display: grid; margin-top: 10px;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px;
   background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
 }
-.details-grid.open { display: grid; }
+.details-grid.collapsed { display: none; }
 .details-grid .ecell { background: var(--ink); }
 
 /* ─────────── TL;DR + action ─────────── */
@@ -401,6 +482,13 @@ main { padding-bottom: 80px; }
   background: var(--accent); margin-left: 2px; animation: blink 1s step-start infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+.essay-note {
+  font-family: var(--sans); font-size: 12px; line-height: 1.5; color: var(--muted);
+  padding: 7px 12px; margin-bottom: 14px;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  display: flex; align-items: flex-start; gap: 7px;
+}
+.essay-note::before { content: "ⓘ"; font-size: 13px; flex-shrink: 0; margin-top: 0px; }
 
 /* ─────────── Drivers ─────────── */
 .drivers-list { display: grid; gap: 10px; }
@@ -439,19 +527,30 @@ main { padding-bottom: 80px; }
 /* ─────────── News ─────────── */
 .news-list { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .news-row {
-  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
-  padding: 14px 18px; background: var(--ink2);
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start;
+  padding: 15px 18px; background: var(--ink2);
   text-decoration: none; color: inherit; transition: background .15s;
 }
 .news-row:hover { background: var(--panel); }
 .nr-main { display: block; text-decoration: none; color: inherit; min-width: 0; }
-.nr-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.nr-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; }
 .news-title { font-size: 14.5px; line-height: 1.45; color: var(--paper); }
+.news-summary {
+  font-size: 12.5px; line-height: 1.5; color: var(--faint); margin-top: 5px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .news-meta {
-  display: flex; gap: 14px; align-items: center; margin-top: 5px;
+  display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 6px;
   font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em;
 }
 .news-meta .npub { color: var(--paper-dim); }
+.news-upvote { display: inline-flex; align-items: center; gap: 4px; color: var(--faint); }
+.news-upvote::before { content: "▲"; font-size: 8px; }
+.news-sentiment { display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; letter-spacing: .04em; }
+.news-sentiment.bullish { color: var(--up); background: var(--up-soft); }
+.news-sentiment.bearish { color: var(--down); background: var(--down-soft); }
+.news-form-type { color: var(--amber); font-weight: 700; }
 .news-link {
   font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--accent); white-space: nowrap;
@@ -561,11 +660,12 @@ main { padding-bottom: 80px; }
 .av-insider-note { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 .av-ratios {
   margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
-  display: flex; flex-wrap: wrap; gap: 16px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
 }
-.av-ratio { }
+.av-ratio { background: var(--ink2); border-radius: 8px; padding: 10px 12px; border: 1px solid var(--line); }
 .av-ratio .rk { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.av-ratio .rv { font-family: var(--mono); font-size: 13px; color: var(--paper); margin-top: 2px; }
+.av-ratio .rv { font-family: var(--mono); font-size: 14px; color: var(--paper); margin-top: 3px; }
+.av-ratio .rhint { font-family: var(--sans); font-size: 10.5px; color: var(--faint); margin-top: 4px; line-height: 1.3; }
 
 /* ─────────── Watch this week ─────────── */
 .watch-list { display: grid; gap: 9px; }
@@ -773,6 +873,92 @@ main { padding-bottom: 80px; }
   .headline { font-size: 28px; }
   .quote-px .px { font-size: 30px; }
 }
+
+/* ─────────── Notes drawer (real-time) ─────────── */
+.drawer-tab {
+  position: fixed; right: 0; top: 38%; z-index: 60; display: none;
+  flex-direction: row; align-items: center; gap: 6px;
+  background: var(--ink2); border: 1px solid var(--line2); border-right: none;
+  border-radius: 10px 0 0 10px; color: var(--muted); padding: 10px 9px; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  writing-mode: vertical-rl; transition: color .15s, background .15s;
+}
+.drawer-tab:hover { color: var(--accent); background: var(--panel2); }
+.drawer-tab.show { display: flex; }
+.drawer-tab .dt-i { writing-mode: horizontal-tb; font-size: 13px; }
+.drawer-tab .dt-n { writing-mode: horizontal-tb; background: var(--accent); color: #fff;
+  border-radius: 999px; font-size: 9px; padding: 1px 5px; min-width: 8px; text-align: center; }
+
+.notes-drawer {
+  position: fixed; top: var(--mh, 60px); right: 0; height: calc(100vh - var(--mh, 60px));
+  width: 366px; max-width: 92vw; z-index: 70;
+  background: var(--panel); border-left: 1px solid var(--line2);
+  box-shadow: -18px 0 50px rgba(0,0,0,.30);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+.notes-drawer.open { transform: translateX(0); }
+body.drawer-pinned .notes-drawer { box-shadow: none; }
+@media (min-width: 1180px) {
+  body.drawer-pinned #main { margin-right: 366px; }
+  body.drawer-pinned .drawer-tab { display: none !important; }
+}
+.nd-head { display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 16px; border-bottom: 1px solid var(--line); }
+.nd-title { font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--paper); }
+.nd-title .nd-sym { color: var(--accent); margin-left: 7px; }
+.nd-tools { display: flex; gap: 5px; }
+.nd-icon { background: none; border: 1px solid var(--line2); color: var(--muted);
+  border-radius: 7px; width: 29px; height: 29px; cursor: pointer; font-size: 13px;
+  line-height: 1; transition: all .15s; }
+.nd-icon:hover { border-color: var(--accent-deep); color: var(--accent); }
+.nd-icon.on { color: var(--accent); border-color: var(--accent); background: rgba(10,132,255,.12); }
+.nd-compose { padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.nd-ctx { font-family: var(--sans); font-size: 12px; color: var(--muted); background: var(--ink2);
+  border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 7px;
+  padding: 7px 10px; margin-bottom: 8px; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nd-text { width: 100%; min-height: 68px; resize: vertical; background: var(--ink2);
+  border: 1px solid var(--line2); border-radius: 9px; color: var(--paper);
+  font-family: var(--sans); font-size: 13.5px; line-height: 1.5; padding: 10px 12px; box-sizing: border-box; }
+.nd-text:focus { outline: none; border-color: var(--accent); }
+.nd-compose-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; gap: 8px; }
+.nd-clearctx { background: none; border: none; color: var(--muted); font-family: var(--mono);
+  font-size: 10.5px; cursor: pointer; text-decoration: underline; padding: 0; }
+.nd-clearctx:hover { color: var(--paper); }
+.nd-list { flex: 1; overflow-y: auto; padding: 12px 16px 26px; display: flex; flex-direction: column; gap: 9px; }
+.nd-empty { color: var(--faint); font-family: var(--sans); font-size: 12.5px; line-height: 1.5;
+  text-align: center; padding: 28px 10px; }
+.nd-note { background: var(--ink2); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; }
+.nd-note-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.nd-note-time { font-family: var(--mono); font-size: 9.5px; color: var(--faint); letter-spacing: .05em; }
+.nd-note-del { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 14px;
+  line-height: 1; padding: 0 2px; opacity: 0; transition: opacity .15s, color .15s; }
+.nd-note:hover .nd-note-del { opacity: 1; }
+.nd-note-del:hover { color: var(--down); }
+.nd-note-hl { font-family: var(--sans); font-size: 11.5px; color: var(--muted);
+  border-left: 2px solid var(--line2); padding-left: 7px; margin-bottom: 5px; line-height: 1.4; }
+.nd-note-hl a { color: var(--muted); text-decoration: none; }
+.nd-note-hl a:hover { color: var(--accent); }
+.nd-note-text { font-family: var(--sans); font-size: 13.5px; color: var(--paper); line-height: 1.5; white-space: pre-wrap; }
+
+/* ─────────── Portfolio heatmap ─────────── */
+.pf-heatmap-wrap { margin: 6px 0 26px; }
+.pf-hm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.pf-hm-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.pf-hm-sub { font-family: var(--sans); font-size: 11.5px; color: var(--faint); }
+.pf-heatmap { position: relative; width: 100%; height: 300px; border-radius: 12px; overflow: hidden;
+  background: var(--line); border: 1px solid var(--line); }
+.hm-tile { position: absolute; overflow: hidden; border: 1px solid var(--ink);
+  cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 4px; box-sizing: border-box; transition: filter .15s; }
+.hm-tile:hover { filter: brightness(1.14); z-index: 3; }
+.hm-sym { font-family: var(--mono); font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.55); line-height: 1.1; }
+.hm-chg { font-family: var(--mono); color: rgba(255,255,255,.94); text-shadow: 0 1px 3px rgba(0,0,0,.55); margin-top: 2px; }
+.pf-hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+.pf-hm-legend-l { font-family: var(--mono); font-size: 9.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
+.pf-hm-scale { width: 150px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--down), var(--line2) 50%, var(--up)); }
 </style>
 </head>
 <body>
@@ -781,8 +967,8 @@ main { padding-bottom: 80px; }
 <header class="masthead">
   <div class="masthead-inner">
     <div class="brand" id="brand-home" title="Home">
-      <span class="brand-mark">Agnes</span>
-      <span class="brand-tag">Investor Desk</span>
+      <span class="brand-icon">T</span>
+      <span class="brand-mark">Tickr</span>
     </div>
 
     <nav class="navlinks">
@@ -808,6 +994,15 @@ main { padding-bottom: 80px; }
         <span id="run-label">Brief me</span>
       </button>
     </div>
+
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle theme">
+      <span class="tt-seg on" id="tt-dark" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M14.5 9.5A6.5 6.5 0 0 1 7 2a.5.5 0 0 0-.6-.6A7 7 0 1 0 15.1 10.1a.5.5 0 0 0-.6-.6z" fill="currentColor"/></svg>
+      </span>
+      <span class="tt-seg" id="tt-light" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3.5A4.5 4.5 0 1 1 3.5 8 4.505 4.505 0 0 1 8 3.5zm0 0V1m0 14v-2.5M3.5 8H1m14 0h-2.5M4.93 4.93 3.17 3.17m9.66 9.66-1.76-1.76M11.07 4.93l1.76-1.76M4.93 11.07l-1.76 1.76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+    </button>
 
     <div class="health" id="health">
       <span class="lamp" id="health-lamp"></span>
@@ -843,6 +1038,19 @@ main { padding-bottom: 80px; }
         <div class="pv-moverline" id="pv-moverline"></div>
       </div>
       <div class="pv-totals" id="pv-totals"></div>
+    </div>
+
+    <div class="pf-heatmap-wrap" id="pf-heatmap-wrap" style="display:none">
+      <div class="pf-hm-head">
+        <span class="pf-hm-title">Holdings heatmap</span>
+        <span class="pf-hm-sub">Tile size = portfolio weight · color = today's move · click to open</span>
+      </div>
+      <div class="pf-heatmap" id="pf-heatmap"></div>
+      <div class="pf-hm-legend">
+        <span class="pf-hm-legend-l">Down</span>
+        <span class="pf-hm-scale"></span>
+        <span class="pf-hm-legend-l">Up</span>
+      </div>
     </div>
 
     <div class="holdings" id="holdings-list"></div>
@@ -907,6 +1115,7 @@ main { padding-bottom: 80px; }
         <h2 class="sec-title"><span class="idx">01</span> Snapshot</h2>
         <span class="sec-note" id="quote-note"></span>
       </div>
+      <p class="snap-intro">Live market data. Each number below includes a plain-English explanation of what it means and how to read it.</p>
       <div class="quote-band" id="quote-band"></div>
       <div class="position-band" id="position-band" style="display:none"></div>
       <div class="essentials" id="essentials"></div>
@@ -1049,6 +1258,29 @@ main { padding-bottom: 80px; }
   </div>
 </div>
 
+<!-- ─────────── Notes drawer (real-time note-taking) ─────────── -->
+<button class="drawer-tab" id="drawer-tab" title="Open notes">
+  <span class="dt-i">✎</span><span>Notes</span><span class="dt-n" id="dt-n" style="display:none">0</span>
+</button>
+<aside class="notes-drawer" id="notes-drawer" aria-hidden="true">
+  <div class="nd-head">
+    <span class="nd-title">Notes<span class="nd-sym" id="nd-sym"></span></span>
+    <div class="nd-tools">
+      <button class="nd-icon" id="nd-pin" title="Pin open beside the brief">⇥</button>
+      <button class="nd-icon" id="nd-close" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="nd-compose">
+    <div class="nd-ctx" id="nd-ctx" style="display:none"></div>
+    <textarea id="nd-text" class="nd-text" placeholder="Jot a thought as you read. Your take, a question, a plan."></textarea>
+    <div class="nd-compose-actions">
+      <button class="nd-clearctx" id="nd-clearctx" style="display:none">✕ headline</button>
+      <button class="ah-btn" id="nd-save" style="margin-left:auto">Save note</button>
+    </div>
+  </div>
+  <div class="nd-list" id="nd-list"></div>
+</aside>
+
 <script>
 "use strict";
 
@@ -1160,7 +1392,7 @@ function gainCls(v) { return v == null ? "muted" : (v >= 0 ? "up" : "down"); }
   try {
     const r = await fetch("/api/health");
     const d = await r.json();
-    if (d && (d.live || d.agnes)) {
+    if (d && (d.live || d.gemini || d.agnes)) {
       healthLamp.classList.add("ok");
       setText(healthText, d.model ? ("live · " + d.model) : "live");
     } else {
@@ -1192,6 +1424,7 @@ function gainCls(v) { return v == null ? "muted" : (v >= 0 ? "up" : "down"); }
       host.appendChild(chip);
     });
     $("demobar").style.display = "block";
+    if (typeof syncDrawerTop === "function") syncDrawerTop();  // masthead grew → reposition drawer
   } catch { /* optional */ }
 })();
 
@@ -1203,6 +1436,8 @@ async function openDemo(key) {
     if (!r.ok) throw new Error("demo unavailable");
     const data = await r.json();
     showView("brief");
+    const dsym = (data.snapshot && data.snapshot.symbol) || "";
+    if (dsym) { State.symbol = dsym; setDrawerContext({ ticker: dsym }); if (Drawer.open || Drawer.pinned) loadDrawerNotes(dsym); }
     if (data.snapshot) renderSnapshotTicker(Object.assign({}, data.snapshot));
     if (Array.isArray(data.history) && data.history.length > 1) renderChart(data.history);
     renderDigest(data);
@@ -1230,8 +1465,8 @@ async function loadPortfolio() {
   } catch { /* offline */ }
   const holds = (data && data.holdings) || [];
   if (holds.length) {
+    showView("portfolio");      // make the view measurable before the heatmap lays out
     renderPortfolio(data);
-    showView("portfolio");
   } else {
     showView("landing");
   }
@@ -1258,6 +1493,101 @@ function renderPortfolio(data) {
   const host = $("holdings-list");
   host.innerHTML = "";
   holds.forEach((h) => host.appendChild(holdingCard(h)));
+
+  _lastHoldings = holds;
+  renderHeatmap(holds);
+}
+
+/* ── Holdings heatmap (squarified treemap) ── */
+let _lastHoldings = [];
+
+function renderHeatmap(holds) {
+  const wrap = $("pf-heatmap-wrap");
+  const host = $("pf-heatmap");
+  const items = (holds || []).filter((h) => (h.value || 0) > 0);
+  if (items.length < 2) { wrap.style.display = "none"; return; }  // a treemap of one tile is pointless
+  wrap.style.display = "block";
+  const W = host.clientWidth || host.offsetWidth || 640;
+  const H = host.clientHeight || 300;
+  host.innerHTML = "";
+  const rects = squarify(items.map((h) => ({ data: h, value: h.value })), 0, 0, W, H);
+  rects.forEach((r) => {
+    const h = r.data;
+    const tile = document.createElement("div");
+    tile.className = "hm-tile";
+    tile.style.left = r.x + "px"; tile.style.top = r.y + "px";
+    tile.style.width = r.w + "px"; tile.style.height = r.h + "px";
+    tile.style.background = hmColor(h.change_pct);
+    const gainStr = h.gain != null ? " · " + moneySigned(h.gain) + " total" : "";
+    tile.title = h.ticker + " · " + pxFmt(h.price) + " · " + fmtPct(h.change_pct, true) +
+      " today · " + moneyFmt(h.value) + " (" + (h.weight != null ? h.weight.toFixed(1) : "0") + "%)" + gainStr;
+    const area = r.w * r.h;
+    const symSize = area > 5200 ? 19 : area > 2200 ? 14 : 11;
+    let inner = '<span class="hm-sym" style="font-size:' + symSize + 'px">' + esc(h.ticker) + "</span>";
+    if (r.h > 30 && r.w > 42) {
+      const chgSize = area > 5200 ? 12 : 10;
+      inner += '<span class="hm-chg" style="font-size:' + chgSize + 'px">' + fmtPct(h.change_pct, true) + "</span>";
+    }
+    tile.innerHTML = inner;
+    tile.addEventListener("click", () => { symInput.value = h.ticker; startGenerate(); });
+    host.appendChild(tile);
+  });
+}
+
+// Squarified treemap (Bruls, Huizing & van Wijk). Returns [{data,x,y,w,h}].
+function squarify(items, X, Y, W, H) {
+  const sorted = items.filter((d) => d.value > 0).slice().sort((a, b) => b.value - a.value);
+  const total = sorted.reduce((s, d) => s + d.value, 0);
+  const out = [];
+  if (total <= 0 || W <= 0 || H <= 0) return out;
+  const scale = (W * H) / total;
+  const areas = sorted.map((d) => ({ data: d.data, area: d.value * scale }));
+  const worst = (row, side) => {
+    let sum = 0, mn = Infinity, mx = 0;
+    for (const a of row) { sum += a; if (a < mn) mn = a; if (a > mx) mx = a; }
+    const s2 = sum * sum, l2 = side * side;
+    return Math.max((l2 * mx) / s2, s2 / (l2 * mn));
+  };
+  let x = X, y = Y, w = W, h = H, i = 0;
+  while (i < areas.length) {
+    const side = Math.min(w, h);
+    let row = [areas[i].area], rowItems = [areas[i]], k = i + 1;
+    while (k < areas.length) {
+      const next = row.concat(areas[k].area);
+      if (worst(row, side) >= worst(next, side)) { row = next; rowItems.push(areas[k]); k++; }
+      else break;
+    }
+    const rowArea = row.reduce((s, a) => s + a, 0);
+    if (w >= h) {
+      const cw = rowArea / h; let cy = y;
+      for (const it of rowItems) { const ih = it.area / cw; out.push({ data: it.data, x, y: cy, w: cw, h: ih }); cy += ih; }
+      x += cw; w -= cw;
+    } else {
+      const rh = rowArea / w; let cx = x;
+      for (const it of rowItems) { const iw = it.area / rh; out.push({ data: it.data, x: cx, y, w: iw, h: rh }); cx += iw; }
+      y += rh; h -= rh;
+    }
+    i = k;
+  }
+  return out;
+}
+
+function hmColor(pct) {
+  if (pct == null || isNaN(pct)) pct = 0;
+  const t = Math.max(-1, Math.min(1, pct / 3));   // saturate at ±3%
+  const up = hexRgb(cssVar("--up") || "#30D158");
+  const down = hexRgb(cssVar("--down") || "#FF453A");
+  const neutral = hexRgb(cssVar("--line2") || "#3A3A3C");
+  const tgt = t >= 0 ? up : down, a = Math.abs(t);
+  const mix = (j) => Math.round(neutral[j] + (tgt[j] - neutral[j]) * a);
+  return "rgb(" + mix(0) + "," + mix(1) + "," + mix(2) + ")";
+}
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function hexRgb(hex) {
+  hex = (hex || "").replace("#", "");
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  const n = parseInt(hex || "3A3A3C", 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
 function pvtCell(k, v, cls) {
@@ -1419,6 +1749,152 @@ $("nav-notes").addEventListener("click", () => loadNotes());
 $("nav-portfolio").addEventListener("click", () => { if (State.running) return; resetView(); loadPortfolio(); });
 $("new-note-btn").addEventListener("click", () => openNoteModal({}));
 
+/* ─────────────────── Notes drawer (real-time) ─────────────────── */
+const Drawer = { open: false, pinned: false, ctx: {} };
+
+// Keep the drawer below the sticky masthead so its header stays clickable and
+// the top-bar controls remain usable (the masthead height changes when the demo
+// bar shows/hides).
+function syncDrawerTop() {
+  const mh = document.querySelector(".masthead");
+  if (mh) document.documentElement.style.setProperty("--mh", Math.round(mh.getBoundingClientRect().height) + "px");
+}
+
+function refreshDrawerChrome() {
+  syncDrawerTop();
+  const tab = $("drawer-tab");
+  // Tab is the affordance to open the drawer; hide it while open or pinned.
+  tab.classList.toggle("show", !Drawer.open && !Drawer.pinned);
+  $("notes-drawer").classList.toggle("open", Drawer.open || Drawer.pinned);
+  $("notes-drawer").setAttribute("aria-hidden", (Drawer.open || Drawer.pinned) ? "false" : "true");
+  $("nd-pin").classList.toggle("on", Drawer.pinned);
+  document.body.classList.toggle("drawer-pinned", Drawer.pinned);
+}
+
+function openDrawer() {
+  Drawer.open = true;
+  refreshDrawerChrome();
+  loadDrawerNotes(State.symbol || Drawer.ctx.ticker || "");
+  setTimeout(() => $("nd-text").focus(), 60);
+}
+function closeDrawer() { Drawer.open = false; refreshDrawerChrome(); }
+function toggleDrawer() { Drawer.open ? closeDrawer() : openDrawer(); }
+
+function setPinned(on) {
+  Drawer.pinned = on;
+  if (on) Drawer.open = true;
+  try { localStorage.setItem("tickr_drawer_pinned", on ? "1" : "0"); } catch {}
+  refreshDrawerChrome();
+  if (on) loadDrawerNotes(State.symbol || Drawer.ctx.ticker || "");
+  rerenderHeatmapIfVisible();   // main width changed → reflow the treemap
+}
+
+function setDrawerContext(ctx) {
+  Drawer.ctx = ctx || {};
+  const sym = Drawer.ctx.ticker || State.symbol || "";
+  setText($("nd-sym"), sym ? "· " + sym : "");
+  const ctxEl = $("nd-ctx"), clr = $("nd-clearctx");
+  if (Drawer.ctx.headline) {
+    ctxEl.style.display = "block";
+    ctxEl.innerHTML = (Drawer.ctx.url
+      ? '<a href="' + esc(Drawer.ctx.url) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">' + esc(Drawer.ctx.headline) + "</a>"
+      : esc(Drawer.ctx.headline));
+    clr.style.display = "inline";
+  } else {
+    ctxEl.style.display = "none"; ctxEl.innerHTML = ""; clr.style.display = "none";
+  }
+}
+
+async function loadDrawerNotes(ticker) {
+  const host = $("nd-list");
+  let notes = [];
+  try {
+    const q = ticker ? "?ticker=" + encodeURIComponent(ticker) : "";
+    const r = await fetch("/api/notes" + q);
+    if (r.ok) notes = (await r.json()).notes || [];
+  } catch { /* offline */ }
+  const n = $("dt-n");
+  if (notes.length) { n.style.display = "inline"; setText(n, String(notes.length)); }
+  else { n.style.display = "none"; }
+  if (!notes.length) {
+    host.innerHTML = '<div class="nd-empty">' +
+      (ticker ? "No notes on " + esc(ticker) + " yet. Capture your first thought above." :
+                "No notes yet. Jot something above as you read.") + "</div>";
+    return;
+  }
+  host.innerHTML = notes.map(drawerNoteHTML).join("");
+}
+
+function drawerNoteHTML(nt) {
+  let time = "";
+  try {
+    const d = new Date(nt.created_at);
+    time = d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " · " +
+           d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  } catch {}
+  const hl = nt.headline
+    ? '<div class="nd-note-hl">' + (nt.url ? '<a href="' + esc(nt.url) + '" target="_blank" rel="noopener">' + esc(nt.headline) + "</a>" : esc(nt.headline)) + "</div>"
+    : "";
+  return '<div class="nd-note">' +
+    '<div class="nd-note-top"><span class="nd-note-time">' + esc(time) + "</span>" +
+    '<button class="nd-note-del" data-del="' + esc(nt.id) + '" title="Delete">×</button></div>' +
+    hl + '<div class="nd-note-text">' + esc(nt.text) + "</div></div>";
+}
+
+async function saveDrawerNote() {
+  const ta = $("nd-text");
+  const text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+  const ticker = Drawer.ctx.ticker || State.symbol || null;
+  try {
+    await fetch("/api/notes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, ticker,
+        headline: Drawer.ctx.headline || null, url: Drawer.ctx.url || null }),
+    });
+    ta.value = "";
+    // A saved note consumes its headline context so the next note starts clean.
+    setDrawerContext({ ticker });
+    loadDrawerNotes(ticker || "");
+    if ($("notes-view").style.display !== "none") loadNotes();
+  } catch { showError("Could not save the note."); }
+}
+
+function openDrawerWith(ctx) { setDrawerContext(ctx); if (!Drawer.open && !Drawer.pinned) openDrawer(); else { loadDrawerNotes(ctx.ticker || State.symbol || ""); setTimeout(() => $("nd-text").focus(), 40); } }
+
+function rerenderHeatmapIfVisible() {
+  if ($("portfolio-view").style.display !== "none" && _lastHoldings.length) {
+    requestAnimationFrame(() => renderHeatmap(_lastHoldings));
+  }
+}
+
+$("drawer-tab").addEventListener("click", toggleDrawer);
+$("nd-close").addEventListener("click", closeDrawer);
+$("nd-pin").addEventListener("click", () => setPinned(!Drawer.pinned));
+$("nd-save").addEventListener("click", saveDrawerNote);
+$("nd-clearctx").addEventListener("click", () => setDrawerContext({ ticker: Drawer.ctx.ticker || State.symbol }));
+$("nd-text").addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); saveDrawerNote(); }
+});
+$("nd-list").addEventListener("click", async (e) => {
+  const del = e.target.getAttribute("data-del");
+  if (del) {
+    try { await fetch("/api/notes/" + encodeURIComponent(del), { method: "DELETE" }); } catch {}
+    loadDrawerNotes(State.symbol || Drawer.ctx.ticker || "");
+    if ($("notes-view").style.display !== "none") loadNotes();
+  }
+});
+// Restore pinned state on load.
+try { if (localStorage.getItem("tickr_drawer_pinned") === "1") setPinned(true); } catch {}
+refreshDrawerChrome();
+
+let _hmResizeTimer = null;
+window.addEventListener("resize", () => {
+  syncDrawerTop();
+  clearTimeout(_hmResizeTimer);
+  _hmResizeTimer = setTimeout(rerenderHeatmapIfVisible, 180);
+});
+
 /* ─────────────────── Controls ─────────────────── */
 $("window-seg").querySelectorAll("button").forEach((b) => {
   b.addEventListener("click", () => {
@@ -1462,8 +1938,8 @@ function syncChartRange(d) {
 
 $("details-toggle").addEventListener("click", () => {
   const grid = $("details-grid");
-  const open = grid.classList.toggle("open");
-  $("details-toggle").textContent = open ? "Hide details ↑" : "Show all numbers ↓";
+  const collapsed = grid.classList.toggle("collapsed");
+  $("details-toggle").textContent = collapsed ? "Show all numbers ↓" : "Collapse numbers ↑";
 });
 
 /* ─────────────────── Running state ─────────────────── */
@@ -1583,6 +2059,10 @@ function startGenerate() {
   showView("brief");
   Object.keys(srcEls).forEach((k) => delete srcEls[k]);
 
+  State.symbol = symbol;
+  setDrawerContext({ ticker: symbol });          // point the notes drawer at this ticker
+  if (Drawer.open || Drawer.pinned) loadDrawerNotes(symbol);
+
   setRunning(true);
   progressEl.classList.add("show");
   buildStepper();
@@ -1652,6 +2132,9 @@ function handleFrame(ev) {
       startEssay();
       statusLine.innerHTML = '<span class="ring sm"></span> Writing the full story';
       break;
+    case "essay_note":
+      showEssayNote(ev.text || "");
+      break;
     case "essay_chunk":
       appendEssay(ev.text || "");
       break;
@@ -1703,41 +2186,109 @@ function renderSnapshotTicker(t) {
 
 function renderEssentials(t) {
   const el = $("essentials");
-  const pos = pctInRange(t.price, t["52w_low"] || (t.key_levels && t.key_levels.week52_low), t["52w_high"] || (t.key_levels && t.key_levels.week52_high));
+  const price = t.price;
+  const low52  = t["52w_low"]  || (t.key_levels && t.key_levels.week52_low);
+  const high52 = t["52w_high"] || (t.key_levels && t.key_levels.week52_high);
+  const pos = pctInRange(price, low52, high52);
+  const vol = t.volume, avgVol = t.avg_volume;
+  const volRatio = vol && avgVol && avgVol > 0 ? vol / avgVol : null;
+
+  function capHint(mc) {
+    if (!mc) return null;
+    if (mc >= 2e12) return "Mega-cap — one of the world's largest companies";
+    if (mc >= 200e9) return "Large-cap — major established company";
+    if (mc >= 10e9)  return "Mid-cap — sizeable, growing business";
+    if (mc >= 2e9)   return "Small-cap — smaller, higher-growth potential";
+    return "Micro-cap — small company, higher risk";
+  }
+  function posHint(p) {
+    if (p == null) return null;
+    if (p >= 85) return "Near its 52-week high — strong run this year";
+    if (p >= 70) return "In the upper part of its range — doing well";
+    if (p <= 15) return "Near its 52-week low — tough year so far";
+    if (p <= 30) return "In the lower part of its range — under pressure";
+    return "Mid-range — neither hot nor cold right now";
+  }
+  function volHint(r) {
+    if (r == null) return null;
+    if (r >= 3)   return `${r.toFixed(1)}× average — unusually heavy, big news day`;
+    if (r >= 1.5) return `${r.toFixed(1)}× average — elevated, above-normal interest`;
+    if (r >= 0.8) return "Close to its typical daily volume";
+    return `${r.toFixed(1)}× average — quiet, below-normal trading`;
+  }
+
   const rows = [
-    ["Market cap", t.market_cap != null ? fmtLarge(t.market_cap) : null],
-    ["52-week range", (t["52w_low"] != null && t["52w_high"] != null) ? (pxFmt(t["52w_low"]) + " – " + pxFmt(t["52w_high"])) : null],
-    ["Position in range", pos != null ? Math.round(pos) + "%" : null],
-    ["Volume today", t.volume != null ? fmtVol(t.volume) : null],
-  ].filter(([, v]) => v != null);
-  el.innerHTML = rows.map(([k, v]) =>
-    '<div class="ecell"><div class="ek">' + esc(k) + "</div><div class=\"ev\">" + esc(v) + "</div></div>"
+    { k: "Market cap",       v: t.market_cap != null ? fmtLarge(t.market_cap) : null,
+      hint: capHint(t.market_cap) },
+    { k: "52-week range",    v: (low52 != null && high52 != null) ? (pxFmt(low52) + " – " + pxFmt(high52)) : null,
+      hint: pos != null ? `Today's price is ${Math.round(pos)}% of the way from low to high` : null },
+    { k: "Position in range",v: pos != null ? Math.round(pos) + "%" : null,
+      hint: posHint(pos), bar: pos },
+    { k: "Volume today",     v: vol != null ? fmtVol(vol) : null,
+      hint: volHint(volRatio) },
+  ].filter(r => r.v != null);
+
+  el.innerHTML = rows.map(r =>
+    '<div class="ecell">' +
+      '<div class="ek">' + esc(r.k) + '</div>' +
+      '<div class="ev">' + esc(r.v) + '</div>' +
+      (r.bar != null
+        ? '<div class="e-bar"><div class="e-fill" style="width:' + Math.min(100, Math.max(0, r.bar)).toFixed(1) + '%"></div>' +
+          '<div class="e-dot" style="left:' + Math.min(100, Math.max(0, r.bar)).toFixed(1) + '%"></div></div>'
+        : '') +
+      (r.hint ? '<div class="ehint">' + esc(r.hint) + '</div>' : '') +
+    '</div>'
   ).join("");
 }
 
 function renderDetails(t) {
+  const pe = t.pe_ratio != null ? Number(t.pe_ratio) : null;
+  const fpe = t.forward_pe != null ? Number(t.forward_pe) : null;
+  const beta = t.beta != null ? Number(t.beta) : null;
+  const dy = t.dividend_yield != null ? Number(t.dividend_yield) : null;
+  const eps = t.eps != null ? Number(t.eps) : null;
+  const vol = t.volume, avgVol = t.avg_volume;
+  const volR = vol && avgVol && avgVol > 0 ? (vol / avgVol) : null;
+
   const rows = [
-    ["Open",       t.open != null ? pxFmt(t.open) : null],
-    ["Prev close", t.prev_close != null ? pxFmt(t.prev_close) : null],
-    ["Day low",    t.day_low != null ? pxFmt(t.day_low) : null],
-    ["Day high",   t.day_high != null ? pxFmt(t.day_high) : null],
-    ["Avg volume", t.avg_volume != null ? fmtVol(t.avg_volume) : null],
-    ["P / E",      t.pe_ratio != null ? Number(t.pe_ratio).toFixed(1) + "x" : null],
-    ["Fwd P/E",    t.forward_pe != null ? Number(t.forward_pe).toFixed(1) + "x" : null],
-    ["EPS",        t.eps != null ? pxFmt(t.eps) : null],
-    ["Div yield",  t.dividend_yield != null ? Number(t.dividend_yield).toFixed(2) + "%" : null],
-    ["Beta",       t.beta != null ? Number(t.beta).toFixed(2) : null],
-    ["Sector",     t.sector || null],
-    ["Industry",   t.industry || null],
-  ].filter(([, v]) => v != null);
+    { k: "Open",       v: t.open != null ? pxFmt(t.open) : null,
+      hint: t.prev_close && t.open ? (t.open > t.prev_close ? "Opened above yesterday's close — gap up" : t.open < t.prev_close ? "Opened below yesterday's close — gap down" : "Flat open") : null },
+    { k: "Prev close", v: t.prev_close != null ? pxFmt(t.prev_close) : null,
+      hint: "Where the stock finished yesterday's trading session" },
+    { k: "Day low",    v: t.day_low != null ? pxFmt(t.day_low) : null,
+      hint: "The lowest price traded today so far" },
+    { k: "Day high",   v: t.day_high != null ? pxFmt(t.day_high) : null,
+      hint: "The highest price traded today so far" },
+    { k: "Avg volume", v: avgVol != null ? fmtVol(avgVol) : null,
+      hint: volR != null ? (volR >= 1.5 ? `Today's volume is ${volR.toFixed(1)}× this average — elevated activity` : volR < 0.7 ? `Today is quiet — only ${volR.toFixed(1)}× this average` : "Today's volume is close to the typical daily pace") : "Typical number of shares traded in a day" },
+    { k: "P/E ratio",  v: pe != null ? pe.toFixed(1) + "×" : null,
+      hint: pe != null ? (pe <= 0 ? "Negative — company is currently losing money" : `You pay $${pe.toFixed(0)} for every $1 of annual earnings`) : null },
+    { k: "Forward P/E",v: fpe != null ? fpe.toFixed(1) + "×" : null,
+      hint: fpe != null ? `Based on next year's forecast earnings — $${fpe.toFixed(0)} per $1 expected profit` : null },
+    { k: "EPS",        v: eps != null ? pxFmt(eps) : null,
+      hint: eps != null ? (eps > 0 ? `The company earns $${eps.toFixed(2)} per share per year` : "Currently losing money on a per-share basis") : null },
+    { k: "Div yield",  v: dy != null ? dy.toFixed(2) + "%" : null,
+      hint: dy != null ? (dy > 0 ? `Pays out ${dy.toFixed(2)}% of the share price as dividends annually` : "No dividend payments") : null },
+    { k: "Beta",       v: beta != null ? beta.toFixed(2) : null,
+      hint: beta != null ? (beta >= 1.2 ? `${beta.toFixed(1)}× — more volatile than the S&P 500` : beta <= 0.8 ? `${beta.toFixed(1)}× — moves less than the S&P 500` : "Moves roughly in line with the overall market") : null },
+    { k: "Sector",     v: t.sector || null,
+      hint: t.sector ? `${t.sector} — the broad market category this company belongs to` : null },
+    { k: "Industry",   v: t.industry || null,
+      hint: t.industry ? `${t.industry} — the specific business segment within its sector` : null },
+  ].filter(r => r.v != null);
+
   const grid = $("details-grid");
   if (!rows.length) { $("details-toggle").style.display = "none"; return; }
-  grid.innerHTML = rows.map(([k, v]) =>
-    '<div class="ecell"><div class="ek">' + esc(k) + "</div><div class=\"ev\">" + esc(v) + "</div></div>"
+  grid.innerHTML = rows.map(r =>
+    '<div class="ecell">' +
+      '<div class="ek">' + esc(r.k) + '</div>' +
+      '<div class="ev">' + esc(r.v) + '</div>' +
+      (r.hint ? '<div class="ehint">' + esc(r.hint) + '</div>' : '') +
+    '</div>'
   ).join("");
   $("details-toggle").style.display = "inline-block";
-  $("details-toggle").textContent = "Show all numbers ↓";
-  $("details-grid").classList.remove("open");
+  $("details-toggle").textContent = "Collapse numbers ↑";
+  $("details-grid").classList.remove("collapsed");
 }
 
 /* ─────────────────── Your position / risk / income ─────────────────── */
@@ -1763,30 +2314,79 @@ function renderRiskIncome(risk, income) {
   if (!wrap) return;
   if (!risk && !income) { wrap.style.display = "none"; return; }
 
+  function riCell(k, v, hint, cls) {
+    return '<div class="ri-cell">' +
+      '<span class="rk">' + esc(k) + '</span>' +
+      '<span class="rv' + (cls ? ' ' + cls : '') + '">' + esc(v) + '</span>' +
+      (hint ? '<span class="rhint">' + esc(hint) + '</span>' : '') +
+    '</div>';
+  }
+
   const rcells = [];
   if (risk) {
-    if (risk.range_pos != null) rcells.push(["52-week position", Math.round(risk.range_pos) + "% of range"]);
-    if (risk.volatility != null) rcells.push(["Volatility (annual)", risk.volatility + "%"]);
-    if (risk.beta != null) rcells.push(["Beta vs market", Number(risk.beta).toFixed(2)]);
-    if (risk.support != null) rcells.push(["Support (floor)", pxFmt(risk.support)]);
-    if (risk.resistance != null) rcells.push(["Resistance (ceiling)", pxFmt(risk.resistance)]);
-    if (risk.week52_low != null && risk.week52_high != null)
-      rcells.push(["52-week range", pxFmt(risk.week52_low) + " – " + pxFmt(risk.week52_high)]);
+    if (risk.range_pos != null) {
+      const rp = Math.round(risk.range_pos);
+      const rpHint = rp >= 85 ? "Near its 52-week high — strong run" :
+                     rp >= 65 ? "In the upper part of its yearly range" :
+                     rp <= 15 ? "Near its 52-week low — tough stretch" :
+                     rp <= 35 ? "In the lower part of its yearly range" :
+                     "Sitting roughly in the middle of its range";
+      rcells.push(riCell("52-week position", rp + "% of range", rpHint));
+    }
+    if (risk.volatility != null) {
+      const vol = Number(risk.volatility);
+      const volHint = vol >= 60 ? "Very volatile — big daily swings, high risk" :
+                      vol >= 35 ? "Above-average volatility — expect sizeable moves" :
+                      vol >= 20 ? "Moderate volatility — typical for most stocks" :
+                      "Low volatility — relatively stable, steady mover";
+      rcells.push(riCell("Volatility (annual)", vol + "%", volHint));
+    }
+    if (risk.beta != null) {
+      const b = Number(risk.beta);
+      const bHint = b >= 1.5 ? `${b.toFixed(1)}× the market — very sensitive to market swings` :
+                    b >= 1.1 ? `Moves ~${Math.round((b-1)*100)}% more than the market on any given day` :
+                    b >= 0.9 ? "Roughly in step with the overall market" :
+                    b >= 0.5 ? `Moves ~${Math.round((1-b)*100)}% less than the market — more stable` :
+                    "Very low sensitivity to market moves";
+      rcells.push(riCell("Beta vs market", b.toFixed(2), bHint));
+    }
+    if (risk.support != null) {
+      rcells.push(riCell("Support (floor)", pxFmt(risk.support),
+        "Price level where buyers have stepped in before — a drop here is the key test"));
+    }
+    if (risk.resistance != null) {
+      rcells.push(riCell("Resistance (ceiling)", pxFmt(risk.resistance),
+        "Price level where sellers have pushed back before — a break above would be bullish"));
+    }
   }
   $("risk-panel").innerHTML = '<div class="ri-title">Risk read</div><div class="ri-cells">' +
-    (rcells.length ? rcells.map(([k, v]) => '<div class="ri-cell"><span class="rk">' + esc(k) + '</span><span class="rv">' + esc(v) + "</span></div>").join("")
-                   : '<span class="rv muted">No risk data.</span>') + "</div>";
+    (rcells.length ? rcells.join("") : '<span class="rv muted">No risk data.</span>') + "</div>";
 
   const icells = [];
   if (income) {
-    icells.push(["Dividend yield", income.dividend_yield ? Number(income.dividend_yield).toFixed(2) + "%" : "None"]);
-    if (income.annual_income != null) icells.push(["Your income / yr", moneyFmt(income.annual_income)]);
-    if (income.ex_dividend_date) icells.push(["Next ex-dividend", income.ex_dividend_date]);
-    if (income.earnings_date) icells.push(["Next earnings", income.earnings_date]);
+    const dy = income.dividend_yield ? Number(income.dividend_yield) : 0;
+    const dyHint = dy > 0
+      ? (dy >= 4 ? "High yield — check if it's sustainable" :
+         dy >= 2 ? "Solid income stream from dividends" :
+         "Modest income; mainly a growth stock")
+      : "No regular dividend payments";
+    icells.push(riCell("Dividend yield", dy > 0 ? dy.toFixed(2) + "%" : "None", dyHint));
+
+    if (income.annual_income != null) {
+      icells.push(riCell("Your income / yr", moneyFmt(income.annual_income),
+        "Estimated cash dividends on your shares per year at current yield"));
+    }
+    if (income.ex_dividend_date) {
+      icells.push(riCell("Ex-dividend date", income.ex_dividend_date,
+        "Own shares before this date to receive the next dividend payment"));
+    }
+    if (income.earnings_date) {
+      icells.push(riCell("Next earnings", income.earnings_date,
+        "The company reports quarterly results on this date — expect possible price volatility"));
+    }
   }
   $("income-panel").innerHTML = '<div class="ri-title">Income &amp; dates</div><div class="ri-cells">' +
-    (icells.length ? icells.map(([k, v]) => '<div class="ri-cell"><span class="rk">' + esc(k) + '</span><span class="rv">' + esc(v) + "</span></div>").join("")
-                   : '<span class="rv muted">No income data.</span>') + "</div>";
+    (icells.length ? icells.join("") : '<span class="rv muted">No income data.</span>') + "</div>";
   wrap.style.display = "grid";
 }
 
@@ -1887,20 +2487,74 @@ function renderAnalystPanel(fh) {
   const ratios = fh.ratios;
   const ratiosEl = $("av-ratios");
   if (ratios && ratiosEl) {
+    function ratioHint(key, val) {
+      if (val == null) return null;
+      if (key === "pe") {
+        if (val <= 0) return "Negative earnings — company is currently losing money";
+        if (val > 60) return `You pay $${val.toFixed(0)} for every $1 of annual profit — priced for high growth`;
+        if (val > 25) return `You pay $${val.toFixed(0)} for every $1 of profit — above-average premium`;
+        if (val > 12) return `You pay $${val.toFixed(0)} for every $1 of profit — reasonable valuation`;
+        return `You pay $${val.toFixed(0)} for every $1 of profit — looks inexpensive`;
+      }
+      if (key === "pb") {
+        if (val <= 1) return "Trading at or below its book value — rare, often a value signal";
+        if (val <= 3) return `Price is ${val.toFixed(1)}× book value — moderate premium to assets`;
+        return `Price is ${val.toFixed(1)}× book value — market expects strong future growth`;
+      }
+      if (key === "roe") {
+        if (val >= 30) return "Excellent — earns strong returns on shareholder money";
+        if (val >= 15) return "Good — efficient use of shareholder capital";
+        if (val >= 5)  return "Average — modest return on capital employed";
+        return "Low — not generating strong returns yet";
+      }
+      if (key === "de") {
+        if (val <= 0.3) return "Low debt — financially conservative, resilient in downturns";
+        if (val <= 1)   return "Moderate debt — manageable leverage";
+        if (val <= 2)   return "Higher debt — worth monitoring in rising-rate environments";
+        return "High debt load — increases risk if earnings fall";
+      }
+      if (key === "r52w") {
+        if (val >= 50)  return "Exceptional year — significantly outperformed the market";
+        if (val >= 15)  return "Strong year — comfortably ahead of market average";
+        if (val >= 0)   return "Positive year — modest gains";
+        if (val >= -20) return "Negative year — underperformed the market";
+        return "Difficult year — significantly underperformed";
+      }
+      if (key === "revg") {
+        if (val >= 20)  return "Fast-growing — expanding its business rapidly";
+        if (val >= 8)   return "Healthy growth — above-average revenue expansion";
+        if (val >= 0)   return "Slow growth — steady but not accelerating";
+        return "Revenue is shrinking — a key concern to watch";
+      }
+      if (key === "epsg") {
+        if (val >= 25)  return "Earnings growing fast — strong profitability momentum";
+        if (val >= 10)  return "Solid earnings growth — improving bottom line";
+        if (val >= 0)   return "Modest earnings growth";
+        return "Earnings declining — profitability under pressure";
+      }
+      return null;
+    }
+
     const rows = [
-      ["P/E",          ratios.pe           != null ? ratios.pe.toFixed(1) : null],
-      ["P/B",          ratios.pb           != null ? ratios.pb.toFixed(2) : null],
-      ["ROE",          ratios.roe          != null ? ratios.roe.toFixed(1) + "%" : null],
-      ["Debt / Equity",ratios.debt_equity  != null ? ratios.debt_equity.toFixed(2) : null],
-      ["52W Return",   ratios.return_52w   != null ? (ratios.return_52w >= 0 ? "+" : "") + ratios.return_52w.toFixed(1) + "%" : null],
-      ["Rev Growth",   ratios.revenue_growth != null ? (ratios.revenue_growth >= 0 ? "+" : "") + ratios.revenue_growth.toFixed(1) + "%" : null],
-      ["EPS Growth",   ratios.eps_growth   != null ? (ratios.eps_growth >= 0 ? "+" : "") + ratios.eps_growth.toFixed(1) + "%" : null],
-    ].filter(function(r) { return r[1] != null; });
+      {k:"P/E (Price-Earnings)",  key:"pe",   v: ratios.pe           != null ? ratios.pe.toFixed(1) + "×"  : null, raw: ratios.pe},
+      {k:"P/B (Price-Book)",      key:"pb",   v: ratios.pb           != null ? ratios.pb.toFixed(2) + "×"  : null, raw: ratios.pb},
+      {k:"ROE (Return on Equity)",key:"roe",  v: ratios.roe          != null ? ratios.roe.toFixed(1) + "%"  : null, raw: ratios.roe},
+      {k:"Debt / Equity",         key:"de",   v: ratios.debt_equity  != null ? ratios.debt_equity.toFixed(2): null, raw: ratios.debt_equity},
+      {k:"52-Week Return",        key:"r52w", v: ratios.return_52w   != null ? (ratios.return_52w >= 0 ? "+" : "") + ratios.return_52w.toFixed(1) + "%" : null, raw: ratios.return_52w},
+      {k:"Revenue Growth",        key:"revg", v: ratios.revenue_growth != null ? (ratios.revenue_growth >= 0 ? "+" : "") + ratios.revenue_growth.toFixed(1) + "%" : null, raw: ratios.revenue_growth},
+      {k:"EPS Growth",            key:"epsg", v: ratios.eps_growth   != null ? (ratios.eps_growth >= 0 ? "+" : "") + ratios.eps_growth.toFixed(1) + "%" : null, raw: ratios.eps_growth},
+    ].filter(function(r) { return r.v != null; });
+
     if (rows.length) {
       ratiosEl.innerHTML = rows.map(function(r) {
-        return '<div class="av-ratio"><div class="rk">' + esc(r[0]) + '</div><div class="rv">' + esc(r[1]) + '</div></div>';
+        const hint = ratioHint(r.key, r.raw);
+        return '<div class="av-ratio">' +
+          '<div class="rk">' + esc(r.k) + '</div>' +
+          '<div class="rv">' + esc(r.v) + '</div>' +
+          (hint ? '<div class="rhint">' + esc(hint) + '</div>' : '') +
+        '</div>';
       }).join("");
-      ratiosEl.style.display = "flex";
+      ratiosEl.style.display = "grid";
     } else {
       ratiosEl.style.display = "none";
     }
@@ -1983,6 +2637,14 @@ function startEssay() {
   block.style.display = "block";
   block.classList.add("reveal");
   host.innerHTML = '<span id="essay-prose"></span><span class="caret" id="essay-caret"></span>';
+}
+function showEssayNote(text) {
+  const host = $("essay-text");
+  if (!host || !text) return;
+  const note = document.createElement("div");
+  note.className = "essay-note";
+  note.textContent = text;
+  host.prepend(note);
 }
 function appendEssay(text) {
   const p = $("essay-prose");
@@ -2187,11 +2849,32 @@ function renderFeed(items) {
   }
   host.innerHTML = "";
   items.forEach((n) => {
-    // Tolerate legacy Yahoo-only news items (cached demos) that lack platform.
     const plat = n.platform || "yahoo";
     const platLabel = PLATFORM_LABELS[plat] || plat;
     const sub = n.label || n.publisher || "";
     const url = n.url || "#";
+    const summary = (n.summary || "").trim();
+    const upvotes = n.upvotes != null ? n.upvotes : null;
+    const numComments = n.num_comments != null ? n.num_comments : null;
+    const sentiment = (n.sentiment || "").toLowerCase();
+    const formType = (n.form_type || "").trim();
+
+    // Build meta line extras
+    let metaExtras = "";
+    if (upvotes != null && upvotes > 0) {
+      const uStr = upvotes >= 1000 ? (upvotes / 1000).toFixed(1) + "k" : String(upvotes);
+      metaExtras += '<span class="news-upvote">' + esc(uStr) + " upvotes</span>";
+    }
+    if (numComments != null && numComments > 0) {
+      metaExtras += '<span>' + esc(numComments) + " comments</span>";
+    }
+    if (sentiment === "bullish" || sentiment === "bearish") {
+      metaExtras += '<span class="news-sentiment ' + esc(sentiment) + '">' + esc(sentiment.charAt(0).toUpperCase() + sentiment.slice(1)) + "</span>";
+    }
+    if (formType) {
+      metaExtras += '<span class="news-form-type">' + esc(formType) + "</span>";
+    }
+
     const row = document.createElement("div");
     row.className = "news-row";
     row.innerHTML =
@@ -2200,9 +2883,11 @@ function renderFeed(items) {
           '<span class="feed-badge p-' + esc(plat) + '">' + esc(platLabel) + "</span>" +
           '<span class="news-title">' + esc(n.title || "Untitled") + "</span>" +
         "</div>" +
+        (summary ? '<div class="news-summary">' + esc(summary) + "</div>" : "") +
         '<div class="news-meta">' +
           (sub ? '<span class="npub">' + esc(sub) + "</span>" : "") +
           (n.age ? '<span>' + esc(n.age) + "</span>" : "") +
+          metaExtras +
         "</div>" +
       "</a>" +
       '<div class="nr-actions">' +
@@ -2218,7 +2903,8 @@ function renderFeed(items) {
 $("news-list").addEventListener("click", (e) => {
   const btn = e.target.closest(".feed-note-btn");
   if (!btn) return;
-  openNoteModal({
+  // Open the live drawer prefilled, so the reader keeps the brief in view.
+  openDrawerWith({
     ticker: State.symbol || "",
     headline: btn.getAttribute("data-note-title") || "",
     url: btn.getAttribute("data-note-url") || "",
@@ -2252,6 +2938,37 @@ function renderCitations(cites) {
 /* on load: show the portfolio if any holdings are saved, else the landing */
 loadPortfolio();
 symInput.focus();
+
+/* ─── Theme toggle ─── */
+(function() {
+  const root   = document.documentElement;
+  const btn    = $("theme-toggle");
+  const segDrk = $("tt-dark");
+  const segLgt = $("tt-light");
+
+  function applyTheme(theme) {
+    if (theme === "light") {
+      root.setAttribute("data-theme", "light");
+      segDrk.classList.remove("on");
+      segLgt.classList.add("on");
+    } else {
+      root.removeAttribute("data-theme");
+      segDrk.classList.add("on");
+      segLgt.classList.remove("on");
+    }
+    try { localStorage.setItem("tickr-theme", theme); } catch(_) {}
+  }
+
+  /* restore saved preference */
+  let saved = "dark";
+  try { saved = localStorage.getItem("tickr-theme") || "dark"; } catch(_) {}
+  applyTheme(saved);
+
+  btn.addEventListener("click", () => {
+    const current = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+    applyTheme(current === "light" ? "dark" : "light");
+  });
+})();
 </script>
 </body>
 </html>
