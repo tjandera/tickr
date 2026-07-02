@@ -67,10 +67,15 @@ anything already running (no more "address already in use"):
 
 Override the model or port with env vars: `LOCAL_MODEL=qwen3:8b PORT=8080 ./run.sh`.
 
-Or start it manually:
+Or start it manually. The server is now **Node.js** (the Python connectors are the
+data tier, called via `scripts/data_cli.py`):
 
 ```bash
-python web/app.py        # add --port 8080 if 3005 is taken
+./server/start.sh                 # Node server on port 3005 (installs deps if needed)
+PORT=8080 ./server/start.sh       # different port
+
+# Legacy Python/FastAPI server (kept as a fallback, same routes):
+cd web && ../.venv/bin/uvicorn app:app --port 3005
 ```
 
 Then open http://localhost:3005 in your browser. Enter a symbol such as `AAPL`,
@@ -142,25 +147,43 @@ the same `web/static/demo/` folder.
 
 ## Architecture
 
+The backend is a **Node.js server** (API + AI "thinking"); the **Python connectors
+stay the data tier**, reached over a small subprocess CLI. The frontend is a single
+unchanged `index.html`.
+
 ```
 agnes-investor-desk/
-├── requirements.txt
-├── run.sh                     One-command launcher (Ollama + app)
+├── server/                    Node.js server (the app)
+│   ├── index.js               Express app + static + routers
+│   ├── api/                   Routes: health, search, ticker, portfolio,
+│   │                          notes, demo, generate (SSE)
+│   ├── thinking/              AI: geminiClient, prompts, synthesize, essay
+│   ├── models/digest.js       Digest shape + coercion + dash-strip
+│   ├── tools/pythonData.js    Subprocess bridge to scripts/data_cli.py
+│   ├── store/store.js         JSON persistence for holdings + notes
+│   └── start.sh               Launcher (PORT defaults to 3005)
 ├── web/
-│   ├── app.py                 FastAPI: SSE briefs, portfolio + notes APIs
+│   ├── app.py                 Legacy FastAPI server (fallback, same routes)
 │   ├── data/                  Your saved holdings + notes (git-ignored)
-│   └── static/
-│       └── index.html         Single-page UI: portfolio, briefs, notes
+│   └── static/index.html      Single-page UI: portfolio, briefs, notes
 └── scripts/
-    ├── finance_digest.py      Orchestrator: build_digest end to end
+    ├── data_cli.py            Python data tier: JSON/NDJSON over the connectors
+    ├── finance_digest.py      Research fan-out + builders + offline fallback
     └── lib/
-        ├── local_client.py    Local LLM client (Ollama, OpenAI-compatible)
-        ├── store.py           JSON persistence for holdings + notes
+        ├── gemini_client.py   Gemini client (Python side)
+        ├── store.py           JSON persistence (Python side)
         ├── yahoo_finance.py   Live prices, fundamentals, OHLCV history
+        ├── finnhub_search.py · youtube_search.py
         ├── yahoo_news.py · google_news_search.py · web_search.py
         ├── reddit_search.py · stocktwits_search.py · sec_edgar_search.py
         └── chart_gen.py       PNG price chart
 ```
+
+The Node server calls `scripts/data_cli.py` once per brief to gather the snapshot,
+research, and deterministic panels (streaming progress as NDJSON), then runs the
+Gemini synthesis + essay itself and assembles the digest. When the AI is
+unavailable it falls back to the Python offline digest/essay, so the brief always
+renders.
 
 ### How it works
 

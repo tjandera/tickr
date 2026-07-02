@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickr — Sign in</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='19' fill='white'%3ET%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ink:#111113; --ink2:#1C1C1E; --panel:#1C1C1E; --panel2:#242426;
+  --line:#2C2C2E; --line2:#3A3A3C; --paper:#F5F5F7; --paper-dim:#D1D1D6;
+  --muted:#A1A1A6; --faint:#7D7D83;
+  --accent:#0A84FF; --accent-deep:#0066CC; --accent-glow:rgba(10,132,255,.18);
+  --up:#30D158; --down:#FF453A; --down-soft:rgba(255,69,58,.14);
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --r-sm:10px; --r-md:12px; --r-lg:18px;
+  --shadow-lg:0 10px 30px rgba(0,0,0,.50);
+  --t-fast:150ms; --ease:cubic-bezier(0.25,0.1,0.25,1);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--ink); color:var(--paper); font-family:var(--sans);
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:24px; position:relative; overflow-x:hidden;
+}
+body::before {
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(1100px 620px at 78% -8%, var(--accent-glow), transparent 60%),
+    radial-gradient(900px 700px at -10% 110%, rgba(48,209,88,.10), transparent 55%),
+    var(--ink);
+}
+
+.card {
+  width:100%; max-width:420px; background:var(--panel);
+  border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg); padding:36px 32px; position:relative;
+}
+.brand { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:6px; }
+.brand-mark { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+  display:grid; place-items:center; color:#fff; font-weight:800; font-size:19px; }
+.brand-name { font-size:22px; font-weight:800; letter-spacing:-.02em; }
+.tagline { text-align:center; color:var(--muted); font-size:13.5px; margin-bottom:26px; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; background:var(--ink2); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:4px; margin-bottom:22px; }
+.tab { flex:1; text-align:center; padding:9px; border-radius:8px; font-size:14px; font-weight:600;
+  color:var(--muted); cursor:pointer; border:none; background:transparent; transition:all var(--t-fast) var(--ease); }
+.tab.active { background:var(--panel2); color:var(--paper); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+
+/* Forms */
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:7px; }
+.field input {
+  width:100%; padding:12px 14px; background:var(--ink2); border:1px solid var(--line2);
+  border-radius:var(--r-sm); color:var(--paper); font-family:var(--sans); font-size:15px;
+  transition:border-color var(--t-fast); outline:none;
+}
+.field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+.field input::placeholder { color:var(--faint); }
+.hint { font-size:12px; color:var(--faint); margin-top:6px; }
+
+.btn {
+  width:100%; padding:12px; border:none; border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--accent),var(--accent-deep)); color:#fff;
+  font-family:var(--sans); font-size:15px; font-weight:700; cursor:pointer;
+  transition:transform var(--t-fast) var(--ease), opacity var(--t-fast); margin-top:6px;
+}
+.btn:hover:not(:disabled) { transform:translateY(-1px); }
+.btn:disabled { opacity:.55; cursor:not-allowed; }
+.btn-ghost { background:transparent; border:1px solid var(--line2); color:var(--paper); }
+
+.row { display:flex; gap:12px; }
+.row .field { flex:1; }
+
+/* Messages */
+.msg { padding:11px 14px; border-radius:var(--r-sm); font-size:13.5px; margin-bottom:18px; display:none; }
+.msg.show { display:block; }
+.msg.err { background:var(--down-soft); color:#FF8078; border:1px solid rgba(255,69,58,.3); }
+.msg.ok  { background:rgba(48,209,88,.12); color:#5BE584; border:1px solid rgba(48,209,88,.3); }
+.msg.info{ background:var(--accent-glow); color:#5AB0FF; border:1px solid rgba(10,132,255,.3); }
+
+.view { display:none; }
+.view.active { display:block; animation:fade .25s var(--ease); }
+@keyframes fade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+.center-link { text-align:center; margin-top:18px; font-size:13.5px; color:var(--muted); }
+.center-link a { color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer; }
+.center-link a:hover { text-decoration:underline; }
+
+/* OTP */
+.otp-input { text-align:center; font-family:var(--mono); font-size:26px; letter-spacing:12px; font-weight:700; padding:14px; }
+.big-icon { text-align:center; font-size:40px; margin-bottom:8px; }
+.view-title { text-align:center; font-size:19px; font-weight:700; margin-bottom:6px; }
+.view-sub { text-align:center; color:var(--muted); font-size:13.5px; margin-bottom:22px; }
+.view-sub b { color:var(--paper); }
+
+/* Onboarding */
+.step-badge { display:inline-block; background:var(--accent-glow); color:#5AB0FF; font-size:11px; font-weight:700;
+  padding:4px 10px; border-radius:99px; margin-bottom:14px; text-transform:uppercase; letter-spacing:.05em; }
+.spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="brand">
+    <div class="brand-mark">T</div>
+    <div class="brand-name">Tickr</div>
+  </div>
+  <div class="tagline">Your portfolio, explained in plain English.</div>
+
+  <div id="msg" class="msg"></div>
+
+  <!-- ===== LOGIN / SIGNUP ===== -->
+  <div id="view-auth" class="view active">
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchTab('login')">Log in</button>
+      <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
+    </div>
+
+    <!-- Login -->
+    <form id="form-login" onsubmit="return doLogin(event)">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" required>
+      </div>
+      <button class="btn" id="login-btn" type="submit">Log in</button>
+    </form>
+
+    <!-- Signup -->
+    <form id="form-signup" class="hidden" onsubmit="return doSignup(event)" style="display:none">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="At least 8 characters" autocomplete="new-password" required>
+        <div class="hint">Use 8+ characters. It's hashed with bcrypt and never stored in plain text.</div>
+      </div>
+      <button class="btn" id="signup-btn" type="submit">Create account</button>
+    </form>
+  </div>
+
+  <!-- ===== EMAIL OTP ===== -->
+  <div id="view-otp" class="view">
+    <div class="big-icon">📬</div>
+    <div class="view-title">Enter your login code</div>
+    <div class="view-sub">We emailed a 6-digit code to <b id="otp-email"></b>. It expires in 10 minutes.</div>
+    <form onsubmit="return doVerifyOtp(event)">
+      <div class="field">
+        <input type="text" id="otp-code" class="otp-input" inputmode="numeric" maxlength="6"
+               placeholder="000000" autocomplete="one-time-code" required>
+      </div>
+      <button class="btn" id="otp-btn" type="submit">Verify &amp; continue</button>
+    </form>
+    <div class="center-link"><a onclick="backToLogin()">← Back to login</a></div>
+  </div>
+
+  <!-- ===== ONBOARDING ===== -->
+  <div id="view-onboard" class="view">
+    <div style="text-align:center"><span class="step-badge">Welcome to Tickr</span></div>
+    <div class="view-title">Add your first stock</div>
+    <div class="view-sub">Save a holding to get a plain-English brief on it: what's happening, and what it means for your money. You can add more later.</div>
+    <form onsubmit="return doAddFirst(event)">
+      <div class="field">
+        <label>Ticker symbol</label>
+        <input type="text" id="ob-ticker" placeholder="AAPL, NVDA, BTC-USD" autocapitalize="characters" required>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Shares <span style="color:var(--faint)">(optional)</span></label>
+          <input type="number" id="ob-shares" placeholder="10" step="any" min="0">
+        </div>
+        <div class="field">
+          <label>Buy price <span style="color:var(--faint)">(optional)</span></label>
+          <input type="number" id="ob-cost" placeholder="165.00" step="any" min="0">
+        </div>
+      </div>
+      <button class="btn" id="ob-btn" type="submit">Add &amp; go to my dashboard</button>
+    </form>
+    <div class="center-link"><a onclick="finishOnboard()">Skip for now →</a></div>
+  </div>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let pendingEmail = "";
+
+// --- messaging ---
+function showMsg(text, kind) {
+  const m = $("msg");
+  m.textContent = text;
+  m.className = "msg show " + kind;
+}
+function clearMsg() { $("msg").className = "msg"; }
+
+// --- view switching ---
+function showView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("view-" + name).classList.add("active");
+}
+function switchTab(which) {
+  clearMsg();
+  $("tab-login").classList.toggle("active", which === "login");
+  $("tab-signup").classList.toggle("active", which === "signup");
+  $("form-login").style.display = which === "login" ? "block" : "none";
+  $("form-signup").style.display = which === "signup" ? "block" : "none";
+}
+function backToLogin() { clearMsg(); showView("auth"); switchTab("login"); }
+
+// --- button loading state ---
+function busy(btn, on, label) {
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner"></span>' + (label || "Working...") : btn.dataset.label;
+}
+
+// --- API helper ---
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`);
+  return data;
+}
+
+// --- signup ---
+async function doSignup(e) {
+  e.preventDefault(); clearMsg();
+  const email = $("signup-email").value.trim();
+  const password = $("signup-password").value;
+  if (password.length < 8) { showMsg("Password must be at least 8 characters.", "err"); return false; }
+  const btn = $("signup-btn"); btn.dataset.label = btn.innerHTML; busy(btn, true, "Creating...");
+  try {
+    await api("/api/auth/signup", { email, password });
+    showMsg("Account created. Check your email for a verification link, then log in.", "ok");
+    switchTab("login");
+    $("login-email").value = email;
+  } catch (err) {
+    showMsg(err.message, "err");
+  } finally { busy(btn, false); }
+  return false;
+}
+
+// --- login → triggers email OTP ---
+async function doLogin(e) {
+  e.preventDefault(); clearMsg();
+  const email = $("login-email").value.trim();
+  const password = $("login-password").value;
+  const btn = $("login-btn"); btn.dataset.label = btn.innerHTML; busy(btn, true, "Checking...");
+  try {
+    const r = await api("/api/auth/login", { email, password });
+    if (r.status === "otp_required") {
+      pendingEmail = email;
+      $("otp-email").textContent = email;
+      showView("otp");
+      setTimeout(() => $("otp-code").focus(), 100);
+    }
+  } catch (err) {
+    showMsg(err.message, "err");
+  } finally { busy(btn, false); }
+  return false;
+}
+
+// --- verify OTP → session + route to onboarding or app ---
+async function doVerifyOtp(e) {
+  e.preventDefault(); clearMsg();
+  const code = $("otp-code").value.trim();
+  const btn = $("otp-btn"); btn.dataset.label = btn.innerHTML; busy(btn, true, "Verifying...");
+  try {
+    const r = await api("/api/auth/verify-otp", { email: pendingEmail, code });
+    if (r.onboarded) { window.location.href = "/"; return false; }
+    showView("onboard");
+    setTimeout(() => $("ob-ticker").focus(), 100);
+  } catch (err) {
+    showMsg(err.message, "err");
+  } finally { busy(btn, false); }
+  return false;
+}
+
+// --- onboarding: add first holding ---
+async function doAddFirst(e) {
+  e.preventDefault(); clearMsg();
+  const ticker = $("ob-ticker").value.trim().toUpperCase();
+  const shares = $("ob-shares").value;
+  const cost = $("ob-cost").value;
+  if (!ticker) return false;
+  const btn = $("ob-btn"); btn.dataset.label = btn.innerHTML; busy(btn, true, "Saving...");
+  try {
+    await api("/api/portfolio", { ticker, shares: shares || 0, cost_basis: cost || null });
+    finishOnboard();
+  } catch (err) {
+    showMsg(err.message, "err");
+    busy(btn, false);
+  }
+  return false;
+}
+function finishOnboard() { window.location.href = "/"; }
+
+// --- on load: handle ?verified, and skip if already logged in ---
+(async function init() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("verified") === "1") showMsg("Email confirmed. You can log in now.", "ok");
+  else if (params.get("verified") === "0") showMsg("That verification link is invalid or expired. Try logging in to resend.", "err");
+
+  // Respect a saved theme from the main app.
+  try {
+    const t = localStorage.getItem("tickr-theme");
+    if (t) document.documentElement.setAttribute("data-theme", t);
+  } catch {}
+
+  // If a valid session already exists, go straight to the app.
+  try {
+    const res = await fetch("/api/auth/me");
+    if (res.ok) window.location.href = "/";
+  } catch {}
+})();
+</script>
+</body>
+</html>

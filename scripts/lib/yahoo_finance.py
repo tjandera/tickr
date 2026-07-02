@@ -127,37 +127,33 @@ def get_ticker_data(symbol: str, days: int = 90) -> Dict[str, Any]:
 def get_quick_quote(symbol: str) -> Optional[Dict[str, Any]]:
     """Lightweight price + day-change for a symbol, no history or full info.
 
-    Used for index/sector/peer context where only the day move matters. Uses
-    yfinance fast_info, which is much cheaper than the full .info call.
+    Used for index/sector/peer context where only the day move matters. Hits
+    Yahoo's chart endpoint directly with a hard timeout, so a slow or throttled
+    Yahoo degrades to None instead of hanging the whole brief (which the heavy
+    yfinance ``.info`` / ``fast_info`` paths can do).
     """
     if not symbol or not symbol.strip():
         return None
     try:
-        t = _yfinance().Ticker(symbol.upper())
-        with _silence_streams():
-            fi = t.fast_info
-
-            def _g(*names):
-                for n in names:
-                    v = None
-                    try:
-                        v = fi[n]
-                    except Exception:
-                        v = getattr(fi, n, None)
-                    if v:
-                        return float(v)
-                return None
-
-            price = _g("lastPrice", "last_price")
-            prev = _g("previousClose", "previous_close")
+        import requests
+        resp = requests.get(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper()}",
+            params={"range": "1d", "interval": "1d"},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=6,
+        )
+        resp.raise_for_status()
+        meta = (((resp.json().get("chart") or {}).get("result") or [{}])[0] or {}).get("meta") or {}
     except Exception:
         return None
+    price = meta.get("regularMarketPrice")
+    prev = meta.get("chartPreviousClose") or meta.get("previousClose")
     if not price or not prev:
         return None
     change = price - prev
     return {
         "symbol": symbol.upper(),
-        "price": round(price, 2),
+        "price": round(float(price), 2),
         "change": round(change, 2),
         "change_pct": round(change / prev * 100, 2),
     }

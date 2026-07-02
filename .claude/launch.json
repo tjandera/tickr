@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "agnes",
-      "runtimeExecutable": "/Users/matth/Documents/agnes_finance/.venv/bin/uvicorn",
-      "runtimeArgs": ["app:app", "--port", "3005", "--log-level", "warning"],
-      "cwd": "/Users/matth/Documents/agnes_finance/web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["index.js"],
+      "cwd": "/Users/matth/Documents/agnes_finance/server",
+      "env": { "PORT": "3005" },
       "port": 3005,
       "autoPort": false
     }

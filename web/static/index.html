@@ -959,6 +959,39 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 .pf-hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; justify-content: flex-end; }
 .pf-hm-legend-l { font-family: var(--mono); font-size: 9.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
 .pf-hm-scale { width: 150px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--down), var(--line2) 50%, var(--up)); }
+
+/* ─────────── Market context + peers (Phase 2) ─────────── */
+.market-ctx { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+.mc-chip { flex: 1 1 200px; background: var(--ink2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; }
+.mc-chip .mc-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.mc-chip .mc-v { font-family: var(--mono); font-size: 14px; color: var(--paper); margin-top: 4px; display: flex; align-items: baseline; gap: 8px; }
+.mc-chip .mc-rel { font-size: 11.5px; font-family: var(--sans); }
+.mc-chip .mc-hint { font-family: var(--sans); font-size: 11px; color: var(--faint); margin-top: 4px; line-height: 1.35; }
+.mc-up { color: var(--up); } .mc-down { color: var(--down); } .mc-flat { color: var(--muted); }
+
+.peers-row { margin-top: 14px; }
+.peers-head { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.peers-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.peer-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--ink2); border: 1px solid var(--line2);
+  border-radius: 8px; padding: 7px 11px; cursor: pointer; transition: border-color .15s, background .15s; }
+.peer-chip:hover { border-color: var(--accent); background: var(--panel2); }
+.peer-sym { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--paper); }
+.peer-chg { font-family: var(--mono); font-size: 11px; }
+
+/* ─────────── Video explainer card (Phase 2) ─────────── */
+.video-card { margin-top: 18px; display: flex; gap: 14px; background: var(--ink2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; text-decoration: none; transition: border-color .15s, transform .15s; }
+.video-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.vc-thumb { position: relative; flex: 0 0 168px; width: 168px; height: 94px; border-radius: 8px; overflow: hidden; background: var(--line); }
+.vc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vc-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.vc-play span { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; padding-left: 3px; }
+.vc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.vc-kicker { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+.vc-title { font-family: var(--sans); font-size: 14.5px; font-weight: 600; color: var(--paper); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.vc-meta { font-family: var(--sans); font-size: 12px; color: var(--faint); margin-top: 6px; }
+@media (max-width: 560px) { .video-card { flex-direction: column; } .vc-thumb { flex-basis: auto; width: 100%; height: 170px; } }
 </style>
 </head>
 <body>
@@ -1119,6 +1152,8 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
       <div class="quote-band" id="quote-band"></div>
       <div class="position-band" id="position-band" style="display:none"></div>
       <div class="essentials" id="essentials"></div>
+      <div class="market-ctx" id="market-ctx" style="display:none"></div>
+      <div class="peers-row" id="peers-row" style="display:none"></div>
       <div class="ri-wrap" id="ri-wrap" style="display:none">
         <div class="ri-panel" id="risk-panel"></div>
         <div class="ri-panel" id="income-panel"></div>
@@ -1151,6 +1186,7 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
         <div class="essay-head">The full story</div>
         <div class="essay-text" id="essay-text"></div>
       </div>
+      <a class="video-card" id="video-card" target="_blank" rel="noopener noreferrer" style="display:none"></a>
     </section>
 
     <!-- 03 Drivers -->
@@ -1284,6 +1320,19 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 <script>
 "use strict";
 
+/* ─────────────────── Auth guard ───────────────────
+   When accounts are enabled (MongoDB connected), the app requires a valid
+   session and sends anonymous visitors to /auth. When accounts are disabled
+   (no DB), the app stays open and uses the local file store, exactly as before. */
+(async function authGuard() {
+  try {
+    const h = await fetch("/api/health").then((r) => r.json()).catch(() => ({}));
+    if (!h.accounts) return; // accounts off → open app
+    const me = await fetch("/api/auth/me");
+    if (!me.ok) window.location.replace("/auth");
+  } catch { /* network hiccup: do not lock the user out */ }
+})();
+
 /* ─────────────────── State ─────────────────── */
 const State = {
   days: 7,
@@ -1308,6 +1357,8 @@ const TOOL_LABELS = {
   google_news:       "Google News",
   stocktwits:        "StockTwits",
   sec:               "SEC EDGAR",
+  finnhub:           "Finnhub",
+  youtube:           "YouTube",
 };
 
 // Display names for the platform behind each feed item / source chip.
@@ -1975,6 +2026,7 @@ function resetView() {
   const aw = $("analyst-wrap"); if (aw) aw.style.display = "none";
   const eb = $("essay-block"); if (eb) eb.style.display = "none";
   const et = $("essay-text"); if (et) et.innerHTML = "";
+  ["market-ctx","peers-row","video-card"].forEach((id) => { const e = $(id); if (e) { e.style.display = "none"; e.innerHTML = ""; } });
   if (State.chart) { try { State.chart.destroy(); } catch {} State.chart = null; }
   $("price-canvas").style.display = "none";
   $("chart-skel").style.display = "grid";
@@ -2665,6 +2717,74 @@ function renderEssayStatic(text) {
   $("essay-prose").textContent = text;
 }
 
+/* ─────────────────── Render: market context, peers, video (Phase 2) ─────────────────── */
+function _moveCls(p) { return p == null ? "mc-flat" : (p >= 0 ? "mc-up" : "mc-down"); }
+
+function renderMarketContext(m) {
+  const host = $("market-ctx");
+  if (!m || (!m.index && !m.sector)) { host.style.display = "none"; host.innerHTML = ""; return; }
+  const chips = [];
+  const sc = m.stock_change_pct;
+  if (m.index) {
+    const rel = m.vs_index;
+    const relTxt = rel == null ? "" :
+      (Math.abs(rel) < 0.3 ? "in line with the market"
+        : (rel > 0 ? "+" + rel.toFixed(1) + " pts vs market" : rel.toFixed(1) + " pts vs market"));
+    chips.push(
+      '<div class="mc-chip"><div class="mc-k">vs S&P 500</div>' +
+      '<div class="mc-v"><span class="' + _moveCls(m.index.change_pct) + '">S&P ' + fmtPct(m.index.change_pct, true) + "</span>" +
+      (rel != null ? '<span class="mc-rel ' + _moveCls(rel) + '">' + esc(relTxt) + "</span>" : "") + "</div>" +
+      '<div class="mc-hint">' + (rel != null && rel >= 0 ? "Your stock is outpacing the broad market today." : "Your stock is lagging the broad market today.") + "</div></div>");
+  }
+  if (m.sector) {
+    const rel = m.vs_sector;
+    const relTxt = rel == null ? "" :
+      (Math.abs(rel) < 0.3 ? "in line with sector"
+        : (rel > 0 ? "+" + rel.toFixed(1) + " pts vs sector" : rel.toFixed(1) + " pts vs sector"));
+    chips.push(
+      '<div class="mc-chip"><div class="mc-k">vs ' + esc(m.sector.name || "Sector") + "</div>" +
+      '<div class="mc-v"><span class="' + _moveCls(m.sector.change_pct) + '">' + esc(m.sector.etf || "Sector") + " " + fmtPct(m.sector.change_pct, true) + "</span>" +
+      (rel != null ? '<span class="mc-rel ' + _moveCls(rel) + '">' + esc(relTxt) + "</span>" : "") + "</div>" +
+      '<div class="mc-hint">How the move compares to others in the same corner of the market.</div></div>');
+  }
+  host.innerHTML = chips.join("");
+  host.style.display = "flex";
+}
+
+function renderPeers(peers) {
+  const host = $("peers-row");
+  if (!Array.isArray(peers) || !peers.length) { host.style.display = "none"; host.innerHTML = ""; return; }
+  const chips = peers.map((p) => {
+    const cls = p.change_pct == null ? "mc-flat" : (p.change_pct >= 0 ? "mc-up" : "mc-down");
+    return '<div class="peer-chip" data-peer="' + esc(p.symbol) + '">' +
+      '<span class="peer-sym">' + esc(p.symbol) + "</span>" +
+      '<span class="peer-chg ' + cls + '">' + (p.change_pct != null ? fmtPct(p.change_pct, true) : "—") + "</span></div>";
+  }).join("");
+  host.innerHTML = '<div class="peers-head">Related tickers · tap to open</div><div class="peers-chips">' + chips + "</div>";
+  host.style.display = "block";
+}
+
+$("peers-row").addEventListener("click", (e) => {
+  const chip = e.target.closest(".peer-chip");
+  if (!chip) return;
+  const sym = chip.getAttribute("data-peer");
+  if (sym) { symInput.value = sym; startGenerate(); }
+});
+
+function renderVideo(v) {
+  const host = $("video-card");
+  if (!v || !v.url) { host.style.display = "none"; host.innerHTML = ""; return; }
+  const meta = [v.channel, v.length_label, v.views_label, v.ago].filter(Boolean).join("  ·  ");
+  host.innerHTML =
+    (v.thumbnail ? '<div class="vc-thumb"><img src="' + esc(v.thumbnail) + '" alt="" loading="lazy">' +
+      '<div class="vc-play"><span>▶</span></div></div>' : "") +
+    '<div class="vc-body"><div class="vc-kicker">▶ Watch · a quick rundown</div>' +
+    '<div class="vc-title">' + esc(v.title || "Video explainer") + "</div>" +
+    '<div class="vc-meta">' + esc(meta) + "</div></div>";
+  host.setAttribute("href", v.url);
+  host.style.display = "flex";
+}
+
 /* ─────────────────── Render: full digest ─────────────────── */
 function renderDigest(d) {
   if (!d) return;
@@ -2678,6 +2798,8 @@ function renderDigest(d) {
   renderPosition(d.position || null);
   renderRiskIncome(d.risk || null, d.income || null);
   renderAnalystPanel(d.finnhub || null);
+  renderMarketContext(d.market || null);
+  renderPeers(d.peers || null);
 
   // 02 TL;DR + action
   if (d.tldr || (d.action && d.action.signal)) {
@@ -2694,6 +2816,7 @@ function renderDigest(d) {
   // The full story — static render for cached demos / offline (live mode streams
   // it in afterward via essay_* events, where d.essay is not yet set).
   if (d.essay) renderEssayStatic(d.essay);
+  renderVideo(d.video || null);
 
   // 03 Drivers
   if (Array.isArray(d.drivers) && d.drivers.length) {
