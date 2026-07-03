@@ -11,6 +11,13 @@ import { isAvailable, modelLabel } from "../thinking/geminiClient.js";
 import { synthesize } from "../thinking/synthesize.js";
 import { streamEssay } from "../thinking/essay.js";
 import { stripDashes } from "../thinking/prompts.js";
+import { getCached, setCached } from "../lib/cache.js";
+
+// Research (snapshot + the 7-source fan-out) is the slowest phase, and its
+// output changes on the minute scale. A short cache makes a repeat brief of the
+// same ticker skip straight to AI synthesis; the recorded progress frames are
+// replayed so the UI experience is identical, just immediate.
+const RESEARCH_TTL_MS = 60_000;
 
 const router = Router();
 const SSE_HEADERS = {
@@ -51,18 +58,32 @@ router.get("/api/generate", async (req, res) => {
   send({ type: "start", symbol, days, topic });
 
   try {
-    // 1. Snapshot + research + panels + offline fallback (one Python call).
+    // 1. Snapshot + research + panels + offline fallback (one Python call),
+    //    with a short-lived cache keyed on the exact request shape.
     send({ type: "phase", key: "snapshot", label: "Fetching market data" });
-    let researchEmitted = false;
-    const data = await runStream("research", { symbol, days, topic, quick }, (ev) => {
-      // Forward the Python progress frames verbatim (snapshot, search_*, status).
-      if (ev.type === "search_start" && !researchEmitted) {
-        researchEmitted = true;
-        send({ type: "phase", key: "research", label: "Reading the news" });
-      }
-      send(ev);
-      if (ev.type === "error" && ev.fatal) throw new Error(ev.message || "snapshot failed");
-    });
+    const cacheKey = `research:${symbol}:${days}:${topic || ""}:${quick}`;
+    let data;
+    const hit = getCached(cacheKey);
+    if (hit) {
+      // Replay the recorded progress frames so the live-sources UI fills in.
+      send({ type: "phase", key: "research", label: "Reading the news" });
+      for (const ev of hit.events) send(ev);
+      data = hit.data;
+    } else {
+      const events = [];
+      let researchEmitted = false;
+      data = await runStream("research", { symbol, days, topic, quick }, (ev) => {
+        // Forward the Python progress frames verbatim (snapshot, search_*, status).
+        if (ev.type === "search_start" && !researchEmitted) {
+          researchEmitted = true;
+          send({ type: "phase", key: "research", label: "Reading the news" });
+        }
+        events.push(ev);
+        send(ev);
+        if (ev.type === "error" && ev.fatal) throw new Error(ev.message || "snapshot failed");
+      });
+      if (data) setCached(cacheKey, { data, events }, RESEARCH_TTL_MS);
+    }
 
     if (!data) throw new Error("no research result");
     const { real, grounded_snapshot, research, position, panels, window, asset_type,

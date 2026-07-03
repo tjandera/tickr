@@ -6,17 +6,18 @@
 <title>Tickr — Sign in</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='19' fill='white'%3ET%3C/text%3E%3C/svg%3E">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5/index.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5/index.css');
 
 :root {
   --ink:#111113; --ink2:#1C1C1E; --panel:#1C1C1E; --panel2:#242426;
   --line:#2C2C2E; --line2:#3A3A3C; --paper:#F5F5F7; --paper-dim:#D1D1D6;
   --muted:#A1A1A6; --faint:#7D7D83;
-  --accent:#0A84FF; --accent-deep:#0066CC; --accent-glow:rgba(10,132,255,.18);
+  --accent:#F5F5F7; --accent-deep:#C7C7CC; --accent-glow:rgba(255,255,255,.14);
   --up:#30D158; --down:#FF453A; --down-soft:rgba(255,69,58,.14);
-  --sans:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
-  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
-  --r-sm:10px; --r-md:12px; --r-lg:18px;
+  --sans:"Geist Variable",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  --mono:"Geist Mono Variable",ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --r-sm:12px; --r-md:16px; --r-lg:22px; --r-pill:999px;
   --shadow-lg:0 10px 30px rgba(0,0,0,.50);
   --t-fast:150ms; --ease:cubic-bezier(0.25,0.1,0.25,1);
 }
@@ -41,15 +42,15 @@ body::before {
   box-shadow:var(--shadow-lg); padding:36px 32px; position:relative;
 }
 .brand { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:6px; }
-.brand-mark { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent),var(--accent-deep));
-  display:grid; place-items:center; color:#fff; font-weight:800; font-size:19px; }
+.brand-mark { width:34px; height:34px; border-radius:9px; background:var(--paper);
+  display:grid; place-items:center; color:var(--ink); font-weight:800; font-size:19px; }
 .brand-name { font-size:22px; font-weight:800; letter-spacing:-.02em; }
 .tagline { text-align:center; color:var(--muted); font-size:13.5px; margin-bottom:26px; }
 
 /* Tabs */
 .tabs { display:flex; gap:4px; background:var(--ink2); border:1px solid var(--line);
-  border-radius:var(--r-md); padding:4px; margin-bottom:22px; }
-.tab { flex:1; text-align:center; padding:9px; border-radius:8px; font-size:14px; font-weight:600;
+  border-radius:var(--r-pill); padding:4px; margin-bottom:22px; }
+.tab { flex:1; text-align:center; padding:9px; border-radius:var(--r-pill); font-size:14px; font-weight:600;
   color:var(--muted); cursor:pointer; border:none; background:transparent; transition:all var(--t-fast) var(--ease); }
 .tab.active { background:var(--panel2); color:var(--paper); box-shadow:0 1px 3px rgba(0,0,0,.3); }
 
@@ -66,8 +67,8 @@ body::before {
 .hint { font-size:12px; color:var(--faint); margin-top:6px; }
 
 .btn {
-  width:100%; padding:12px; border:none; border-radius:var(--r-sm);
-  background:linear-gradient(135deg,var(--accent),var(--accent-deep)); color:#fff;
+  width:100%; padding:12px; border:none; border-radius:var(--r-pill);
+  background:var(--accent); color:var(--ink);
   font-family:var(--sans); font-size:15px; font-weight:700; cursor:pointer;
   transition:transform var(--t-fast) var(--ease), opacity var(--t-fast); margin-top:6px;
 }
@@ -83,7 +84,7 @@ body::before {
 .msg.show { display:block; }
 .msg.err { background:var(--down-soft); color:#FF8078; border:1px solid rgba(255,69,58,.3); }
 .msg.ok  { background:rgba(48,209,88,.12); color:#5BE584; border:1px solid rgba(48,209,88,.3); }
-.msg.info{ background:var(--accent-glow); color:#5AB0FF; border:1px solid rgba(10,132,255,.3); }
+.msg.info{ background:var(--accent-glow); color:var(--paper-dim); border:1px solid var(--line2); }
 
 .view { display:none; }
 .view.active { display:block; animation:fade .25s var(--ease); }
@@ -101,10 +102,10 @@ body::before {
 .view-sub b { color:var(--paper); }
 
 /* Onboarding */
-.step-badge { display:inline-block; background:var(--accent-glow); color:#5AB0FF; font-size:11px; font-weight:700;
+.step-badge { display:inline-block; background:var(--accent-glow); color:var(--paper); font-size:11px; font-weight:700;
   padding:4px 10px; border-radius:99px; margin-bottom:14px; text-transform:uppercase; letter-spacing:.05em; }
-.spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4);
-  border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
+.spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(0,0,0,.25);
+  border-top-color:var(--ink); border-radius:50%; animation:spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>

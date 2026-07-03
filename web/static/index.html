@@ -7,7 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='19' fill='white'%3ET%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5/index.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5/index.css');
 
 /* ── Design tokens (dark default — photoAI-aligned) ── */
 :root {
@@ -22,9 +23,9 @@
   --muted:      #A1A1A6;
   --faint:      #7D7D83;
 
-  --accent:     #0A84FF;
-  --accent-deep:#0066CC;
-  --accent-glow: rgba(10,132,255,.18);
+  --accent:     #F5F5F7;
+  --accent-deep:#C7C7CC;
+  --accent-glow: rgba(255,255,255,.14);
 
   --up:         #30D158;
   --up-soft:    rgba(48,209,88,.14);
@@ -34,14 +35,15 @@
   --amber-soft: rgba(255,214,10,.12);
   --slate:      #8E8E93;
 
-  --sans:   "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --sans:   "Geist Variable", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   --serif:  ui-serif, "New York", Georgia, serif;
-  --mono:   ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --mono:   "Geist Mono Variable", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 12px;
-  --r-lg: 18px;
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-pill: 999px;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,.45);
   --shadow-md: 0 2px 8px rgba(0,0,0,.45);
@@ -67,9 +69,9 @@
   --muted:      #6E6E73;
   --faint:      #86868B;
 
-  --accent:     #0066CC;
-  --accent-deep:#0040A0;
-  --accent-glow: rgba(0,102,204,.12);
+  --accent:     #1D1D1F;
+  --accent-deep:#48484D;
+  --accent-glow: rgba(0,0,0,.10);
 
   --up:         #34C759;
   --up-soft:    rgba(52,199,89,.14);
@@ -119,7 +121,7 @@ body::after {
 }
 [data-theme="light"] body::after { opacity: 0; }
 
-::selection { background: var(--accent-glow); color: #fff; }
+::selection { background: var(--accent-glow); }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 6px; border: 2px solid var(--ink); }
@@ -148,9 +150,9 @@ html { transition: background-color var(--t-med) var(--ease-out), color var(--t-
 .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; cursor: default; }
 .brand-icon {
   width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+  background: var(--paper);
   display: inline-flex; align-items: center; justify-content: center;
-  color: white; font-weight: 800; font-size: 14px; letter-spacing: -.03em;
+  color: var(--ink); font-weight: 800; font-size: 14px; letter-spacing: -.03em;
   font-family: var(--sans); box-shadow: var(--shadow-sm);
 }
 .brand-mark {
@@ -185,7 +187,7 @@ html { transition: background-color var(--t-med) var(--ease-out), color var(--t-
 .field {
   display: flex; align-items: center; gap: 8px;
   background: var(--ink2); border: 1px solid var(--line);
-  border-radius: 9px; height: 40px; padding: 0 13px;
+  border-radius: var(--r-pill); height: 40px; padding: 0 16px;
   transition: border-color .18s, box-shadow .18s;
 }
 .field:focus-within { border-color: var(--accent-deep); box-shadow: 0 0 0 3px var(--accent-glow); }
@@ -198,22 +200,22 @@ html { transition: background-color var(--t-med) var(--ease-out), color var(--t-
 }
 .field-sym input::placeholder { color: var(--faint); text-transform: none; letter-spacing: 0; }
 
-.seg { display: inline-flex; background: var(--ink2); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg { display: inline-flex; background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
 .seg button {
   background: none; border: none; cursor: pointer;
   font-family: var(--mono); font-size: 11.5px; letter-spacing: .03em;
-  color: var(--muted); padding: 6px 11px; border-radius: 6px;
+  color: var(--muted); padding: 6px 13px; border-radius: var(--r-pill);
   transition: all .15s;
 }
 .seg button:hover { color: var(--paper-dim); }
-.seg button.on { background: var(--accent); color: #1a1407; font-weight: 700; }
+.seg button.on { background: var(--accent); color: var(--ink); font-weight: 700; }
 
 .run {
   display: inline-flex; align-items: center; gap: 9px;
-  background: var(--accent); color: #1a1407;
-  border: 1px solid var(--accent); border-radius: 9px;
-  font-family: var(--sans); font-weight: 700; font-size: 13.5px;
-  padding: 0 18px; height: 40px; cursor: pointer;
+  background: var(--accent); color: var(--ink);
+  border: 1px solid var(--accent); border-radius: var(--r-pill);
+  font-family: var(--sans); font-weight: 600; font-size: 13.5px;
+  padding: 0 20px; height: 40px; cursor: pointer;
   transition: all .18s; white-space: nowrap; letter-spacing: .01em;
 }
 .run:hover:not(:disabled) { box-shadow: 0 6px 22px var(--accent-glow); transform: translateY(-1px); }
@@ -337,7 +339,7 @@ main { padding-bottom: 80px; }
 .window-panel {
   margin-top: 18px;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px;
+  gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md);
   overflow: hidden;
 }
 .window-cell { background: var(--ink2); padding: 12px 14px; }
@@ -372,7 +374,7 @@ main { padding-bottom: 80px; }
 .sec-note { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
 
 /* ─────────── Snapshot ─────────── */
-.quote-band { display: grid; grid-template-columns: auto auto 1fr; gap: 34px; align-items: center; padding: 22px 26px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.quote-band { display: grid; grid-template-columns: auto auto 1fr; gap: 30px; align-items: center; padding: 24px 28px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); }
 .quote-id .qsym { font-family: var(--mono); font-weight: 700; font-size: 30px; letter-spacing: .02em; color: var(--paper); }
 .quote-id .qname { font-size: 13px; color: var(--muted); margin-top: 3px; max-width: 220px; }
 .quote-px .px { font-family: var(--mono); font-weight: 500; font-size: 38px; letter-spacing: -.01em; line-height: 1; color: var(--paper); }
@@ -383,7 +385,7 @@ main { padding-bottom: 80px; }
 .chg .arw { font-size: 11px; }
 
 .snap-intro { font-family: var(--sans); font-size: 12.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
-.essentials { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.essentials { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
 .ecell { background: var(--ink2); padding: 14px 16px; }
 .ecell .ek { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .ecell .ev { font-family: var(--mono); font-size: 15px; color: var(--paper); margin-top: 4px; }
@@ -407,7 +409,7 @@ main { padding-bottom: 80px; }
 
 /* Risk + income panels */
 .ri-wrap { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.ri-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 16px 18px; }
+.ri-panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; }
 .ri-panel .ri-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .ri-panel .ri-title::before { content: ""; width: 16px; height: 1px; background: var(--accent); }
 .ri-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
@@ -426,7 +428,7 @@ main { padding-bottom: 80px; }
 .details-grid {
   display: grid; margin-top: 10px;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px;
-  background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden;
 }
 .details-grid.collapsed { display: none; }
 .details-grid .ecell { background: var(--ink); }
@@ -435,7 +437,7 @@ main { padding-bottom: 80px; }
 .tldr-card {
   background: linear-gradient(180deg, var(--panel), var(--ink2));
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   padding: 26px 28px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -453,7 +455,7 @@ main { padding-bottom: 80px; }
   display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-weight: 700; font-size: 18px;
   letter-spacing: .14em;
-  padding: 14px 22px; border-radius: 12px;
+  padding: 14px 22px; border-radius: var(--r-sm);
   border: 1.5px solid currentColor; min-width: 200px;
 }
 .signal-chip.accumulate { color: var(--up);    background: var(--up-soft); }
@@ -502,7 +504,7 @@ main { padding-bottom: 80px; }
 /* ─────────── Bull / Bear ─────────── */
 .bullbear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .case-card {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: 22px 24px; position: relative; overflow: hidden;
 }
 .case-card.bull { border-left: 3px solid var(--up); }
@@ -525,7 +527,7 @@ main { padding-bottom: 80px; }
 .case-level .lvl-v { color: var(--paper); font-weight: 700; }
 
 /* ─────────── News ─────────── */
-.news-list { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.news-list { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
 .news-row {
   display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start;
   padding: 15px 18px; background: var(--ink2);
@@ -557,8 +559,8 @@ main { padding-bottom: 80px; }
 }
 .news-empty {
   padding: 18px; text-align: center; color: var(--muted);
-  font-family: var(--mono); font-size: 12px;
-  background: var(--ink2); border-radius: 12px; border: 1px dashed var(--line2);
+  font-family: var(--sans); font-size: 13px;
+  background: var(--ink2); border-radius: var(--r-md); border: 1px solid var(--line);
 }
 
 /* ─────────── Sources strip + feed badges ─────────── */
@@ -602,7 +604,7 @@ main { padding-bottom: 80px; }
 /* ─────────── Analyst View panel ─────────── */
 .av-wrap {
   margin-top: 14px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 13px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: 18px 20px;
 }
 .av-wrap .av-head {
@@ -679,25 +681,57 @@ main { padding-bottom: 80px; }
 }
 
 /* ─────────── Chart ─────────── */
-.chart-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.chart-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px 22px; }
 .chart-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-.range { display: inline-flex; background: var(--ink2); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; }
+.chart-top-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.compare-add { display: flex; gap: 7px; align-items: center; }
+.cmp-in { width: 150px; height: 34px; font-size: 12px; }
+.cmp-add-btn { height: 34px; padding: 0 13px; font-size: 12px; }
+.range { display: inline-flex; background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 3px; gap: 2px; }
 .range button {
   background: none; border: none; cursor: pointer;
   font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
-  color: var(--muted); padding: 5px 11px; border-radius: 5px; transition: all .15s;
+  color: var(--muted); padding: 5px 13px; border-radius: var(--r-pill); transition: all .15s;
 }
 .range button:hover { color: var(--paper-dim); }
-.range button.on { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-deep); padding: 4px 10px; }
+.range button.on { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-deep); padding: 4px 12px; }
 .chart-frame { position: relative; height: 280px; }
 .chart-frame canvas { display: none; }
 .chart-skel {
-  position: absolute; inset: 0; border-radius: 10px;
-  border: 1px dashed var(--line2);
+  position: absolute; inset: 0; border-radius: var(--r-md);
+  border: 1px solid var(--line);
   display: grid; place-items: center;
   font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em;
   background: repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 1px, transparent 1px 38px);
 }
+
+/* ─────────── Compare legend ─────────── */
+.compare-legend { margin-top: 16px; display: none; flex-direction: column; gap: 1px; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); }
+.cmp-row { display: grid; grid-template-columns: 3px 30px 1.6fr auto auto auto 26px; gap: 13px; align-items: center; padding: 11px 14px; background: var(--ink2); }
+.cmp-row .cmp-bar { width: 3px; align-self: stretch; border-radius: 2px; }
+.cmp-id .cmp-sym { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--paper); }
+.cmp-id .cmp-name { font-size: 11.5px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.cmp-price { font-family: var(--mono); font-size: 13px; color: var(--paper); text-align: right; }
+.cmp-chg { font-family: var(--mono); font-size: 12px; text-align: right; }
+.cmp-chg.up { color: var(--up); } .cmp-chg.down { color: var(--down); } .cmp-chg.flat { color: var(--slate); }
+.cmp-pct { font-family: var(--mono); font-weight: 700; font-size: 11px; padding: 4px 9px; border-radius: 6px; text-align: center; white-space: nowrap; }
+.cmp-pct.up { color: var(--up); background: var(--up-soft); }
+.cmp-pct.down { color: var(--down); background: var(--down-soft); }
+.cmp-pct.flat { color: var(--slate); background: rgba(140,138,130,.10); }
+.cmp-remove { background: none; border: 1px solid var(--line2); color: var(--muted); border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 13px; line-height: 1; transition: all .15s; }
+.cmp-remove:hover { border-color: var(--down); color: var(--down); }
+
+/* ─────────── Ticker logos (with letter fallback) ─────────── */
+.tk-logo {
+  position: relative; border-radius: 8px; overflow: hidden;
+  background: var(--panel2); border: 1px solid var(--line);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.tk-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tk-logo .tk-letter { display: none; font-family: var(--sans); font-weight: 700; color: var(--paper-dim); }
+.tk-logo.fallback .tk-letter { display: block; }
+.quote-id { display: flex; align-items: center; gap: 14px; }
+.hc-id-head { display: flex; align-items: center; gap: 11px; margin-bottom: 2px; }
 
 /* ─────────── Footer ─────────── */
 .footer { margin-top: 14px; padding: 28px 0 0; border-top: 1px solid var(--line); }
@@ -709,7 +743,7 @@ main { padding-bottom: 80px; }
   background: var(--ink2);
 }
 .disclaimer {
-  margin-top: 24px; padding: 16px 20px; border-radius: 11px;
+  margin-top: 24px; padding: 16px 20px; border-radius: var(--r-md);
   background: rgba(217,164,65,.06); border: 1px solid rgba(217,164,65,.22);
   display: flex; align-items: center; gap: 13px;
 }
@@ -722,7 +756,7 @@ main { padding-bottom: 80px; }
 
 /* ─────────── Errors / landing ─────────── */
 .errbox {
-  margin: 20px 0; padding: 16px 20px; border-radius: 12px;
+  margin: 20px 0; padding: 16px 20px; border-radius: var(--r-md);
   background: var(--down-soft); border: 1px solid rgba(208,99,95,.4);
   display: none; align-items: center; gap: 13px;
 }
@@ -741,17 +775,17 @@ main { padding-bottom: 80px; }
 .landing-add, .addbox-form { display: flex; gap: 9px; flex-wrap: wrap; justify-content: center; margin-top: 26px; }
 .addbox-form { justify-content: flex-start; margin-top: 12px; }
 .ah-in {
-  background: var(--ink2); border: 1px solid var(--line); border-radius: 9px;
-  height: 42px; padding: 0 14px; color: var(--paper);
+  background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  height: 42px; padding: 0 16px; color: var(--paper);
   font-family: var(--mono); font-size: 13px; outline: none; transition: border-color .18s, box-shadow .18s;
 }
 .ah-in:focus { border-color: var(--accent-deep); box-shadow: 0 0 0 3px var(--accent-glow); }
 #ah-ticker, #ah-ticker0 { width: 150px; text-transform: uppercase; }
 #ah-shares, #ah-shares0, #ah-cost, #ah-cost0 { width: 140px; }
 .ah-btn {
-  background: var(--accent); color: #1a1407; border: 1px solid var(--accent);
-  border-radius: 9px; height: 42px; padding: 0 20px; cursor: pointer;
-  font-family: var(--sans); font-weight: 700; font-size: 13.5px; white-space: nowrap; transition: all .18s;
+  background: var(--accent); color: var(--ink); border: 1px solid var(--accent);
+  border-radius: var(--r-pill); height: 42px; padding: 0 22px; cursor: pointer;
+  font-family: var(--sans); font-weight: 600; font-size: 13.5px; white-space: nowrap; transition: all .18s;
 }
 .ah-btn:hover { box-shadow: 0 6px 22px var(--accent-glow); transform: translateY(-1px); }
 
@@ -762,7 +796,7 @@ main { padding-bottom: 80px; }
 .pv-moverline { margin-top: 14px; font-size: 14px; color: var(--paper-dim); line-height: 1.5; max-width: 560px; }
 .pv-moverline .mv-up { color: var(--up); font-family: var(--mono); }
 .pv-moverline .mv-down { color: var(--down); font-family: var(--mono); }
-.pv-totals { display: flex; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; flex-shrink: 0; }
+.pv-totals { display: flex; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; flex-shrink: 0; }
 .pvt { background: var(--ink2); padding: 14px 20px; min-width: 130px; }
 .pvt-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; }
 .pvt-v { font-family: var(--mono); font-size: 18px; color: var(--paper); margin-top: 5px; display: block; }
@@ -771,7 +805,7 @@ main { padding-bottom: 80px; }
 .holdings { display: grid; gap: 11px; }
 .hcard {
   display: grid; grid-template-columns: 1.4fr 2.4fr auto; gap: 20px; align-items: center;
-  padding: 16px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 13px;
+  padding: 18px 22px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg);
   transition: border-color .15s;
 }
 .hcard:hover { border-color: var(--line2); }
@@ -792,12 +826,12 @@ main { padding-bottom: 80px; }
 .hc-sig.watch { color: var(--amber); background: var(--amber-soft); }
 .hc-sig.trim { color: var(--down); background: var(--down-soft); }
 .hc-actions { display: flex; flex-direction: column; gap: 7px; }
-.hc-btn { background: var(--ink2); color: var(--paper); border: 1px solid var(--line2); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: var(--mono); font-size: 11px; white-space: nowrap; transition: all .15s; }
+.hc-btn { background: var(--ink2); color: var(--paper); border: 1px solid var(--line2); border-radius: var(--r-pill); padding: 8px 16px; cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 500; white-space: nowrap; transition: all .15s; }
 .hc-btn:hover { border-color: var(--accent-deep); color: var(--accent); }
 .hc-btn.ghost { border-color: var(--line); color: var(--muted); }
 .hc-btn.ghost:hover { border-color: var(--down); color: var(--down); }
 
-.addbox { margin-top: 22px; padding: 20px 22px; background: var(--ink2); border: 1px dashed var(--line2); border-radius: 13px; }
+.addbox { margin-top: 22px; padding: 22px 24px; background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-lg); }
 .addbox-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--paper-dim); }
 .addbox-hint { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
@@ -805,8 +839,8 @@ main { padding-bottom: 80px; }
 .navlinks { display: flex; gap: 4px; flex-shrink: 0; }
 .navlink {
   background: none; border: none; cursor: pointer;
-  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
-  color: var(--muted); padding: 7px 11px; border-radius: 7px; transition: all .15s;
+  font-family: var(--sans); font-weight: 500; font-size: 13px; letter-spacing: .01em;
+  color: var(--muted); padding: 7px 14px; border-radius: var(--r-pill); transition: all .15s;
 }
 .navlink:hover { color: var(--paper); background: var(--ink2); }
 .navlink.on { color: var(--accent); background: var(--accent-glow); }
@@ -821,8 +855,8 @@ main { padding-bottom: 80px; }
 }
 .note-day-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .note-card {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  padding: 15px 18px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 16px 20px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start;
 }
 .note-card .nc-body { min-width: 0; }
 .note-card .nc-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; flex-wrap: wrap; }
@@ -832,13 +866,39 @@ main { padding-bottom: 80px; }
 .note-card .nc-head a:hover { color: var(--accent); }
 .note-card .nc-text { font-size: 14.5px; line-height: 1.55; color: var(--paper); white-space: pre-wrap; }
 .note-card .nc-time { font-family: var(--mono); font-size: 10px; color: var(--muted); }
-.note-del { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 7px; padding: 6px 10px; cursor: pointer; font-family: var(--mono); font-size: 10.5px; transition: all .15s; }
+.note-del { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: var(--r-pill); padding: 6px 13px; cursor: pointer; font-family: var(--sans); font-size: 11.5px; transition: all .15s; }
 .note-del:hover { border-color: var(--down); color: var(--down); }
-.notes-empty { padding: 40px; text-align: center; color: var(--muted); font-family: var(--mono); font-size: 12px; border: 1px dashed var(--line2); border-radius: 12px; }
+.notes-empty { padding: 40px; text-align: center; color: var(--muted); font-family: var(--sans); font-size: 13px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--ink2); }
 
 /* feed note button */
-.feed-note-btn { background: none; border: 1px solid var(--line2); color: var(--muted); border-radius: 6px; padding: 4px 9px; cursor: pointer; font-family: var(--mono); font-size: 10px; white-space: nowrap; transition: all .15s; margin-left: 10px; }
+.feed-note-btn { background: none; border: 1px solid var(--line2); color: var(--muted); border-radius: var(--r-pill); padding: 4px 11px; cursor: pointer; font-family: var(--sans); font-size: 11px; white-space: nowrap; transition: all .15s; margin-left: 10px; }
 .feed-note-btn:hover { border-color: var(--accent-deep); color: var(--accent); }
+
+/* ─────────── Account settings ─────────── */
+.acct-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px 24px; margin-bottom: 16px; }
+.acct-card-title { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-dim); margin-bottom: 14px; }
+.acct-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.acct-summary-row:last-child { border-bottom: none; }
+.acct-summary-k { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.acct-summary-v { font-size: 14px; color: var(--paper); font-weight: 600; }
+.acct-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 3px 8px; border-radius: 6px; }
+.acct-badge.ok { color: var(--up); background: var(--up-soft); }
+.acct-badge.warn { color: var(--amber); background: var(--amber-soft); }
+.acct-form { display: flex; gap: 9px; flex-wrap: wrap; }
+.acct-form .ah-in { flex: 1; min-width: 200px; }
+.acct-msg { margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 9px; display: none; }
+.acct-msg.show.ok { display: block; color: var(--up); background: var(--up-soft); }
+.acct-msg.show.err { display: block; color: var(--down); background: var(--down-soft); }
+.acct-danger { border-color: rgba(208,99,95,.35); }
+.acct-danger-text { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; max-width: 520px; }
+.acct-btn-danger { background: var(--down); border-color: var(--down); color: #fff; }
+.acct-btn-danger:hover { box-shadow: 0 6px 22px var(--down-soft); }
+.acct-btn-ghost { background: none; border: 1px solid var(--line2); color: var(--paper); }
+.acct-btn-ghost:hover { border-color: var(--accent-deep); color: var(--accent); box-shadow: none; transform: none; }
+.acct-confirm { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line2); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.acct-confirm-hint { font-size: 13px; color: var(--paper-dim); }
+.acct-confirm .ah-in { width: 100%; max-width: 320px; }
+.acct-confirm-actions { display: flex; gap: 10px; }
 
 /* ─────────── Modal ─────────── */
 .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(6,7,9,.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -948,7 +1008,7 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 .pf-hm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .pf-hm-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .pf-hm-sub { font-family: var(--sans); font-size: 11.5px; color: var(--faint); }
-.pf-heatmap { position: relative; width: 100%; height: 300px; border-radius: 12px; overflow: hidden;
+.pf-heatmap { position: relative; width: 100%; height: 300px; border-radius: var(--r-md); overflow: hidden;
   background: var(--line); border: 1px solid var(--line); }
 .hm-tile { position: absolute; overflow: hidden; border: 1px solid var(--ink);
   cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -973,14 +1033,14 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 .peers-head { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .peers-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .peer-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--ink2); border: 1px solid var(--line2);
-  border-radius: 8px; padding: 7px 11px; cursor: pointer; transition: border-color .15s, background .15s; }
+  border-radius: var(--r-pill); padding: 6px 13px 6px 8px; cursor: pointer; transition: border-color .15s, background .15s; }
 .peer-chip:hover { border-color: var(--accent); background: var(--panel2); }
 .peer-sym { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--paper); }
 .peer-chg { font-family: var(--mono); font-size: 11px; }
 
 /* ─────────── Video explainer card (Phase 2) ─────────── */
 .video-card { margin-top: 18px; display: flex; gap: 14px; background: var(--ink2); border: 1px solid var(--line);
-  border-radius: 12px; padding: 12px; text-decoration: none; transition: border-color .15s, transform .15s; }
+  border-radius: var(--r-md); padding: 12px; text-decoration: none; transition: border-color .15s, transform .15s; }
 .video-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .vc-thumb { position: relative; flex: 0 0 168px; width: 168px; height: 94px; border-radius: 8px; overflow: hidden; background: var(--line); }
 .vc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1007,6 +1067,7 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
     <nav class="navlinks">
       <button class="navlink" id="nav-portfolio">Portfolio</button>
       <button class="navlink" id="nav-notes">Notes</button>
+      <button class="navlink" id="nav-account" style="display:none">Account</button>
     </nav>
 
     <div class="controls">
@@ -1111,6 +1172,48 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
       <button class="ah-btn" id="new-note-btn">＋ New note</button>
     </div>
     <div class="notes-list" id="notes-list"></div>
+  </section>
+
+  <!-- ============ Account ============ -->
+  <section class="nview" id="account-view" style="display:none">
+    <div class="pv-head">
+      <div class="pv-headline">
+        <span class="kicker">Your account</span>
+        <h1 class="pv-h1">Account settings</h1>
+        <div class="pv-moverline">Manage your email, password, and account data.</div>
+      </div>
+    </div>
+
+    <div class="acct-card" id="acct-summary"></div>
+
+    <div class="acct-card">
+      <div class="acct-card-title">Change password</div>
+      <form class="acct-form" id="acct-pw-form">
+        <input type="password" class="ah-in" id="acct-pw-current" placeholder="Current password" autocomplete="current-password" required>
+        <input type="password" class="ah-in" id="acct-pw-new" placeholder="New password (8+ characters)" autocomplete="new-password" required>
+        <button type="submit" class="ah-btn" id="acct-pw-btn">Update password</button>
+      </form>
+      <div class="acct-msg" id="acct-pw-msg"></div>
+    </div>
+
+    <div class="acct-card acct-danger">
+      <div class="acct-card-title">Danger zone</div>
+      <p class="acct-danger-text">Deleting your account permanently removes your holdings, notes, and login. This cannot be undone.</p>
+      <button class="ah-btn acct-btn-danger" id="acct-delete-btn">Delete my account</button>
+
+      <div class="acct-confirm" id="acct-confirm" style="display:none">
+        <p class="acct-confirm-hint">Type <b id="acct-confirm-email"></b> and your password to confirm.</p>
+        <input type="text" class="ah-in" id="acct-confirm-email-input" placeholder="Type your email" autocomplete="off">
+        <input type="password" class="ah-in" id="acct-confirm-pw-input" placeholder="Your password" autocomplete="current-password">
+        <div class="acct-confirm-actions">
+          <button class="ah-btn acct-btn-danger" id="acct-confirm-yes">Permanently delete</button>
+          <button class="ah-btn acct-btn-ghost" id="acct-confirm-cancel">Cancel</button>
+        </div>
+        <div class="acct-msg" id="acct-del-msg"></div>
+      </div>
+    </div>
+
+    <button class="ah-btn acct-btn-ghost" id="acct-logout-btn">Log out</button>
   </section>
 
   <!-- Landing -->
@@ -1232,17 +1335,24 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
       </div>
       <div class="chart-card">
         <div class="chart-top">
-          <span class="sec-note">Close and volume</span>
-          <div class="range" id="chart-range">
-            <button data-days="7">7D</button>
-            <button data-days="30" class="on">30D</button>
-            <button data-days="90">90D</button>
+          <span class="sec-note" id="chart-mode-note">Close and volume</span>
+          <div class="chart-top-controls">
+            <div class="compare-add">
+              <input type="text" id="cmp-input" class="ah-in cmp-in" placeholder="Compare vs. ticker" maxlength="12" autocomplete="off" spellcheck="false">
+              <button id="cmp-add-btn" class="ah-btn cmp-add-btn" title="Add to comparison">+ Compare</button>
+            </div>
+            <div class="range" id="chart-range">
+              <button data-days="7">7D</button>
+              <button data-days="30" class="on">30D</button>
+              <button data-days="90">90D</button>
+            </div>
           </div>
         </div>
         <div class="chart-frame">
           <div class="chart-skel" id="chart-skel">loading price history</div>
           <canvas id="price-canvas"></canvas>
         </div>
+        <div class="compare-legend" id="compare-legend" style="display:none"></div>
       </div>
     </section>
 
@@ -1329,7 +1439,9 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
     const h = await fetch("/api/health").then((r) => r.json()).catch(() => ({}));
     if (!h.accounts) return; // accounts off → open app
     const me = await fetch("/api/auth/me");
-    if (!me.ok) window.location.replace("/auth");
+    if (!me.ok) return window.location.replace("/auth");
+    const accountNav = document.getElementById("nav-account");
+    if (accountNav) accountNav.style.display = "";
   } catch { /* network hiccup: do not lock the user out */ }
 })();
 
@@ -1342,7 +1454,12 @@ const State = {
   chart: null,
   digest: null,
   es: null,
+  primaryHistory: null,
+  compare: [],
+  navSeq: 0,
 };
+const COMPARE_COLORS = ["#4fb286", "#5AB0FF", "#f4b740", "#c084fc"];
+const COMPARE_MAX = 3;
 
 const PHASES = [
   { key: "snapshot",  label: "Market data" },
@@ -1469,6 +1586,7 @@ function gainCls(v) { return v == null ? "muted" : (v >= 0 ? "up" : "down"); }
       const chip = document.createElement("button");
       chip.className = "demo-chip";
       chip.innerHTML =
+        logoHTML(d.symbol || d.key, 16) +
         '<span class="dsym">' + esc(d.symbol || d.key || "") + "</span>" +
         '<span class="dname">' + esc(d.name || d.headline || "") + "</span>";
       chip.addEventListener("click", () => openDemo(d.key));
@@ -1503,23 +1621,48 @@ function showView(name) {
   landing.style.display = (name === "landing") ? "block" : "none";
   $("portfolio-view").style.display = (name === "portfolio") ? "block" : "none";
   $("notes-view").style.display = (name === "notes") ? "block" : "none";
+  $("account-view").style.display = (name === "account") ? "block" : "none";
   digestRoot.style.display = (name === "brief") ? "block" : "none";
   $("nav-portfolio").classList.toggle("on", name === "portfolio");
   $("nav-notes").classList.toggle("on", name === "notes");
+  $("nav-account").classList.toggle("on", name === "account");
 }
 
+// Stale-while-revalidate: paint the last-known portfolio instantly from
+// localStorage, then refresh from the server in the background. A slow or
+// failed refresh never blanks the page — the user just keeps the last data.
+const PF_CACHE_KEY = "tickr-pf-cache";
+function readPfCache() {
+  try { return JSON.parse(localStorage.getItem(PF_CACHE_KEY) || "null"); } catch { return null; }
+}
+function writePfCache(data) {
+  try { localStorage.setItem(PF_CACHE_KEY, JSON.stringify(data)); } catch { /* storage full */ }
+}
 async function loadPortfolio() {
+  const nav = ++State.navSeq;
+  const cachedData = readPfCache();
+  const hasCache = cachedData && (cachedData.holdings || []).length;
+  if (hasCache) {
+    showView("portfolio");      // instant paint from the last snapshot
+    renderPortfolio(cachedData);
+  }
   let data = null;
   try {
     const r = await fetch("/api/portfolio/overview");
     if (r.ok) data = await r.json();
   } catch { /* offline */ }
+  if (nav !== State.navSeq) return; // user already navigated away
   const holds = (data && data.holdings) || [];
   if (holds.length) {
+    writePfCache(data);
     showView("portfolio");      // make the view measurable before the heatmap lays out
     renderPortfolio(data);
-  } else {
+  } else if (data && !holds.length) {
+    // A real empty portfolio (not an error): clear the cache, show onboarding.
+    try { localStorage.removeItem(PF_CACHE_KEY); } catch {}
     showView("landing");
+  } else if (!hasCache) {
+    showView("landing");        // no cache AND the refresh failed
   }
 }
 
@@ -1658,8 +1801,10 @@ function holdingCard(h) {
       (h.gain_pct != null ? " (" + fmtPct(h.gain_pct, true) + ")" : "") + "</span>";
   el.innerHTML =
     '<div class="hc-id">' +
-      '<div><span class="hc-sym">' + esc(h.ticker) + "</span></div>" +
-      '<div class="hc-name">' + esc(h.name || "") + "</div>" +
+      '<div class="hc-id-head">' + logoHTML(h.ticker, 32) +
+        '<div><div><span class="hc-sym">' + esc(h.ticker) + "</span></div>" +
+        '<div class="hc-name">' + esc(h.name || "") + "</div></div>" +
+      "</div>" +
       '<div class="hc-px"><span class="hc-price">' + pxFmt(h.price) + "</span>" +
         '<span class="hc-chg ' + cls + '">' + arw + " " + fmtPct(h.change_pct) + "</span></div>" +
     "</div>" +
@@ -1749,11 +1894,13 @@ $("note-modal").addEventListener("click", (e) => { if (e.target === $("note-moda
 
 async function loadNotes() {
   if (State.running) return;
+  const nav = ++State.navSeq;
   resetView();
+  showView("notes"); // paint the shell immediately; rows stream in below
   let notes = [];
   try { const r = await fetch("/api/notes"); if (r.ok) notes = (await r.json()).notes || []; } catch { /* offline */ }
+  if (nav !== State.navSeq) return; // user already navigated away
   renderNotes(notes);
-  showView("notes");
 }
 function renderNotes(notes) {
   const host = $("notes-list");
@@ -1796,9 +1943,118 @@ $("notes-list").addEventListener("click", async (e) => {
   const del = e.target.getAttribute("data-del");
   if (del) { try { await fetch("/api/notes/" + encodeURIComponent(del), { method: "DELETE" }); loadNotes(); } catch {} }
 });
-$("nav-notes").addEventListener("click", () => loadNotes());
-$("nav-portfolio").addEventListener("click", () => { if (State.running) return; resetView(); loadPortfolio(); });
+/* ─────────────────── Hash routing ───────────────────
+   Views live at #portfolio, #notes, #account. Back/forward and reloads land on
+   the right view, and clicks are instant because loaders paint cached data
+   first. The brief flow stays unrouted (it is transient, driven by Brief me). */
+function navigate(name) {
+  if (State.running) return;
+  if (location.hash === "#" + name) applyRoute(); // same-hash click still refreshes
+  else location.hash = name;
+}
+function applyRoute() {
+  if (State.running) return;
+  const h = (location.hash || "").replace("#", "");
+  if (h === "notes") { loadNotes(); return; }
+  if (h === "account") { loadAccount(); return; }
+  resetView();
+  loadPortfolio();
+}
+window.addEventListener("hashchange", applyRoute);
+
+$("nav-notes").addEventListener("click", () => navigate("notes"));
+$("nav-portfolio").addEventListener("click", () => navigate("portfolio"));
 $("new-note-btn").addEventListener("click", () => openNoteModal({}));
+
+/* ─────────────────── Account ─────────────────── */
+async function loadAccount() {
+  if (State.running) return;
+  const nav = ++State.navSeq;
+  resetView();
+  showView("account");
+  $("acct-summary").innerHTML = '<div class="acct-summary-row"><span class="acct-summary-k">Loading…</span></div>';
+  try {
+    const r = await fetch("/api/auth/me");
+    if (nav !== State.navSeq) return; // user already navigated away
+    if (!r.ok) { window.location.href = "/auth"; return; }
+    const { user } = await r.json();
+    if (nav !== State.navSeq) return;
+    renderAccountSummary(user);
+  } catch {
+    $("acct-summary").innerHTML = '<div class="acct-summary-row"><span class="acct-summary-k">Could not load account details.</span></div>';
+  }
+}
+function renderAccountSummary(user) {
+  let memberSince = "—", lastLogin = "—";
+  try { memberSince = new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); } catch {}
+  try { lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("en-US") : "—"; } catch {}
+  $("acct-summary").innerHTML =
+    '<div class="acct-summary-row"><span class="acct-summary-k">Email</span><span class="acct-summary-v">' + esc(user.email) + "</span></div>" +
+    '<div class="acct-summary-row"><span class="acct-summary-k">Status</span><span class="acct-badge ' +
+      (user.emailVerified ? 'ok">Verified' : 'warn">Unverified') + "</span></div>" +
+    '<div class="acct-summary-row"><span class="acct-summary-k">Member since</span><span class="acct-summary-v">' + esc(memberSince) + "</span></div>" +
+    '<div class="acct-summary-row"><span class="acct-summary-k">Holdings</span><span class="acct-summary-v">' + (user.holdings ? user.holdings.length : 0) + "</span></div>" +
+    '<div class="acct-summary-row"><span class="acct-summary-k">Notes</span><span class="acct-summary-v">' + (user.notesCount || 0) + "</span></div>" +
+    '<div class="acct-summary-row"><span class="acct-summary-k">Last login</span><span class="acct-summary-v">' + esc(lastLogin) + "</span></div>";
+  $("acct-confirm-email").textContent = user.email;
+}
+function acctMsg(id, text, kind) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = "acct-msg show " + kind;
+}
+$("acct-pw-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const currentPassword = $("acct-pw-current").value;
+  const newPassword = $("acct-pw-new").value;
+  const btn = $("acct-pw-btn");
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/auth/password", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) acctMsg("acct-pw-msg", data.detail || "Could not update password.", "err");
+    else { acctMsg("acct-pw-msg", "Password updated.", "ok"); $("acct-pw-form").reset(); }
+  } catch { acctMsg("acct-pw-msg", "Network error. Try again.", "err"); }
+  finally { btn.disabled = false; }
+});
+$("acct-delete-btn").addEventListener("click", () => {
+  $("acct-confirm").style.display = "flex";
+  $("acct-delete-btn").style.display = "none";
+});
+$("acct-confirm-cancel").addEventListener("click", () => {
+  $("acct-confirm").style.display = "none";
+  $("acct-delete-btn").style.display = "";
+  $("acct-confirm-email-input").value = "";
+  $("acct-confirm-pw-input").value = "";
+  $("acct-del-msg").className = "acct-msg";
+});
+$("acct-confirm-yes").addEventListener("click", async () => {
+  const confirmEmail = $("acct-confirm-email-input").value.trim();
+  const password = $("acct-confirm-pw-input").value;
+  const btn = $("acct-confirm-yes");
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/auth/account", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmEmail, password }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { acctMsg("acct-del-msg", data.detail || "Could not delete account.", "err"); btn.disabled = false; return; }
+    try { localStorage.removeItem(PF_CACHE_KEY); } catch {}
+    window.location.href = "/auth";
+  } catch { acctMsg("acct-del-msg", "Network error. Try again.", "err"); btn.disabled = false; }
+});
+$("acct-logout-btn").addEventListener("click", async () => {
+  try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
+  try { localStorage.removeItem(PF_CACHE_KEY); } catch {}
+  window.location.href = "/auth";
+});
+$("nav-account").addEventListener("click", () => navigate("account"));
 
 /* ─────────────────── Notes drawer (real-time) ─────────────────── */
 const Drawer = { open: false, pinned: false, ctx: {} };
@@ -1955,28 +2211,35 @@ $("window-seg").querySelectorAll("button").forEach((b) => {
   });
 });
 
-$("brand-home").addEventListener("click", () => {
-  if (State.running) return;
-  resetView();
-  loadPortfolio();
-});
+$("brand-home").addEventListener("click", () => navigate("portfolio"));
 
 symInput.addEventListener("keydown", (e) => { if (e.key === "Enter") startGenerate(); });
 runBtn.addEventListener("click", startGenerate);
 
+// Range switching slices the already-fetched 90-day history locally, so 7D/30D/
+// 90D clicks are instant. The network is only touched once, if the brief loaded
+// with a shorter window than requested. Compare tickers store their full history
+// and are aligned by date at render time, so they never need refetching here.
+async function ensureFullHistory(days) {
+  if (State.fullHistory && State.fullHistory.length >= days) return State.fullHistory;
+  const r = await fetch("/api/ticker/" + encodeURIComponent(State.symbol) + "?days=90");
+  if (!r.ok) throw new Error("history fetch failed");
+  const data = await r.json();
+  if (!data || !Array.isArray(data.history) || data.history.length < 2) throw new Error("no history");
+  State.fullHistory = data.history;
+  return State.fullHistory;
+}
 $("chart-range").querySelectorAll("button").forEach((b) => {
   b.addEventListener("click", async () => {
     const d = parseInt(b.dataset.days, 10);
     syncChartRange(d);
     State.chartDays = d;
     if (!State.symbol) return;
-    $("chart-skel").style.display = "grid";
     try {
-      const r = await fetch("/api/ticker/" + encodeURIComponent(State.symbol) + "?days=" + d);
-      if (!r.ok) throw new Error();
-      const data = await r.json();
-      if (data && Array.isArray(data.history)) renderChart(data.history);
+      const full = await ensureFullHistory(d);
+      renderChart(full.slice(-d));
     } catch {
+      $("chart-skel").style.display = "grid";
       $("chart-skel").textContent = "could not refresh chart";
     }
   });
@@ -2031,6 +2294,12 @@ function resetView() {
   $("price-canvas").style.display = "none";
   $("chart-skel").style.display = "grid";
   $("chart-skel").textContent = "loading price history";
+  State.primaryHistory = null;
+  State.fullHistory = null;
+  State.snapshot = null;
+  State.compare = [];
+  const cl = $("compare-legend"); if (cl) { cl.style.display = "none"; cl.innerHTML = ""; }
+  const ci = $("cmp-input"); if (ci) ci.value = "";
 }
 
 function showError(msg, fatal) {
@@ -2205,6 +2474,7 @@ function handleFrame(ev) {
 /* ─────────────────── Snapshot ─────────────────── */
 function renderSnapshotTicker(t) {
   if (!t) return;
+  State.snapshot = t; // cached for the compare legend's primary-ticker row
   const band = $("quote-band");
   const change = t.change != null ? t.change : null;
   const cp = t.change_pct != null ? t.change_pct : null;
@@ -2214,8 +2484,11 @@ function renderSnapshotTicker(t) {
 
   band.innerHTML =
     '<div class="quote-id">' +
-      '<div class="qsym">' + esc(t.symbol || State.symbol || "") + "</div>" +
-      '<div class="qname">' + esc(t.name || "") + "</div>" +
+      logoHTML(t.symbol || State.symbol, 44) +
+      '<div>' +
+        '<div class="qsym">' + esc(t.symbol || State.symbol || "") + "</div>" +
+        '<div class="qname">' + esc(t.name || "") + "</div>" +
+      "</div>" +
     "</div>" +
     '<div class="quote-px">' +
       '<div class="px">' + pxFmt(t.price) + "</div>" +
@@ -2616,11 +2889,27 @@ function renderAnalystPanel(fh) {
 }
 
 /* ─────────────────── Chart ─────────────────── */
+// Destroy whatever Chart.js instance is actually attached to a canvas, asking
+// Chart.js's own registry rather than trusting State.chart (which can desync
+// from the live instance and cause "Canvas is already in use" errors).
+function destroyChartOn(canvas) {
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  State.chart = null;
+}
+
 function renderChart(history) {
   if (!Array.isArray(history) || history.length < 2) return;
+  State.primaryHistory = history; // cached so compare add/remove can re-render without refetching
+  // Keep the longest series seen as the master copy for instant local slicing.
+  if (!State.fullHistory || history.length >= State.fullHistory.length) State.fullHistory = history;
+  if (State.compare.length) return renderCompareChart(history);
+
   const canvas = $("price-canvas");
   $("chart-skel").style.display = "none";
   canvas.style.display = "block";
+  setText($("chart-mode-note"), "Close and volume");
+  const legend = $("compare-legend"); if (legend) legend.style.display = "none";
 
   const labels  = history.map((h) => h.date);
   const closes  = history.map((h) => h.close);
@@ -2635,7 +2924,7 @@ function renderChart(history) {
   grad.addColorStop(0, up ? "rgba(79,178,134,.22)" : "rgba(208,99,95,.22)");
   grad.addColorStop(1, "rgba(79,178,134,0)");
 
-  if (State.chart) { try { State.chart.destroy(); } catch {} }
+  destroyChartOn(canvas);
   State.chart = new Chart(canvas, {
     data: {
       labels,
@@ -2681,6 +2970,152 @@ function renderChart(history) {
     },
   });
 }
+
+/* ─────────────────── Compare overlay (% change vs. other tickers) ─────────────────── */
+function pctSeries(history) {
+  const closes = history.map((h) => h.close);
+  const base = closes.find((c) => c != null);
+  if (base == null) return history.map(() => null);
+  return closes.map((c) => (c == null ? null : (c / base - 1) * 100));
+}
+function renderCompareChart(primaryHistory) {
+  const canvas = $("price-canvas");
+  $("chart-skel").style.display = "none";
+  canvas.style.display = "block";
+  setText($("chart-mode-note"), "% change vs. " + State.compare.length + " ticker" + (State.compare.length > 1 ? "s" : ""));
+
+  const labels = primaryHistory.map((h) => h.date);
+  const grid = "rgba(255,255,255,.045)";
+
+  const series = [
+    { symbol: State.symbol, color: COMPARE_COLORS[0], pct: pctSeries(primaryHistory) },
+    ...State.compare.map((c, i) => {
+      const byDate = new Map(c.history.map((h) => [h.date, h.close]));
+      const aligned = labels.map((d) => (byDate.has(d) ? byDate.get(d) : null));
+      const base = aligned.find((v) => v != null);
+      const pct = aligned.map((v) => (v == null || base == null ? null : (v / base - 1) * 100));
+      return { symbol: c.symbol, color: c.color, pct };
+    }),
+  ];
+
+  const datasets = [
+    { label: "0%", data: labels.map(() => 0), borderColor: "rgba(255,255,255,.22)", borderDash: [4, 4],
+      borderWidth: 1, pointRadius: 0, fill: false, order: 0 },
+    ...series.map((s) => ({
+      label: s.symbol, data: s.pct, borderColor: s.color, backgroundColor: s.color,
+      borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: false, tension: 0.2, spanGaps: true, order: 1,
+    })),
+  ];
+
+  destroyChartOn(canvas);
+  State.chart = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#16171e", borderColor: "#33343f", borderWidth: 1,
+          titleColor: "#a7a293", bodyColor: "#ece6d8", padding: 10, cornerRadius: 8,
+          titleFont: { family: "JetBrains Mono", size: 10 },
+          bodyFont: { family: "JetBrains Mono", size: 12 },
+          filter: (c) => c.dataset.label !== "0%",
+          callbacks: { label: (c) => "  " + c.dataset.label + " " + fmtPct(c.parsed.y, true) },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#6f6c63", font: { family: "JetBrains Mono", size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
+          grid: { color: grid, drawTicks: false }, border: { color: "#25262f" },
+        },
+        y: {
+          position: "right",
+          ticks: { color: "#a7a293", font: { family: "JetBrains Mono", size: 9 }, callback: (v) => (v > 0 ? "+" : "") + v + "%" },
+          grid: { color: grid, drawTicks: false }, border: { display: false },
+        },
+      },
+    },
+  });
+
+  renderCompareLegend();
+}
+// Ticker logo with a letter fallback (mirrors the reference design's fallback
+// circle). Parqet serves clean logos by plain ticker; crypto uses its own path.
+function logoHTML(symbol, size) {
+  const s = String(symbol || "").toUpperCase();
+  const crypto = s.match(/^([A-Z0-9]+)-(USD|USDT|EUR|GBP)$/);
+  const url = crypto
+    ? "https://assets.parqet.com/logos/crypto/" + encodeURIComponent(crypto[1]) + "?format=png"
+    : "https://assets.parqet.com/logos/symbol/" + encodeURIComponent(s) + "?format=png";
+  return '<span class="tk-logo" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.42) + 'px">' +
+    '<img src="' + url + '" alt="" loading="lazy" onerror="this.parentNode.classList.add(&quot;fallback&quot;);this.remove()">' +
+    '<span class="tk-letter">' + esc(s.charAt(0) || "?") + "</span></span>";
+}
+
+function cmpRowHTML(symbol, name, price, change, changePct, color, removable) {
+  const cls = _moveCls(changePct).replace("mc-", "");
+  const arrow = changePct == null ? "" : (changePct >= 0 ? "▲ " : "▼ ");
+  return '<div class="cmp-row">' +
+    '<span class="cmp-bar" style="background:' + color + '"></span>' +
+    logoHTML(symbol, 28) +
+    '<div class="cmp-id"><div class="cmp-sym">' + esc(symbol) + '</div><div class="cmp-name">' + esc(name || "") + '</div></div>' +
+    '<span class="cmp-price">' + pxFmt(price) + '</span>' +
+    '<span class="cmp-chg ' + cls + '">' + (change == null ? "—" : (change >= 0 ? "+" : "−") + "$" + Math.abs(change).toFixed(2)) + '</span>' +
+    '<span class="cmp-pct ' + cls + '">' + arrow + fmtPct(changePct == null ? null : Math.abs(changePct), false) + '</span>' +
+    (removable ? '<button class="cmp-remove" data-remove="' + esc(symbol) + '" title="Remove">✕</button>' : '<span></span>') +
+    '</div>';
+}
+function renderCompareLegend() {
+  const host = $("compare-legend");
+  if (!host) return;
+  if (!State.compare.length || !State.snapshot) { host.style.display = "none"; host.innerHTML = ""; return; }
+  const d = State.snapshot;
+  const rows = [cmpRowHTML(State.symbol, d.name, d.price, d.change, d.change_pct, COMPARE_COLORS[0], false)];
+  State.compare.forEach((c) => rows.push(cmpRowHTML(c.symbol, c.name, c.price, c.change, c.change_pct, c.color, true)));
+  host.innerHTML = rows.join("");
+  host.style.display = "flex";
+}
+async function addCompareTicker(raw) {
+  const symbol = String(raw || "").trim().toUpperCase();
+  if (!symbol || !State.primaryHistory) return;
+  if (symbol === State.symbol) return showError("That's already the main ticker.");
+  if (State.compare.some((c) => c.symbol === symbol)) return;
+  if (State.compare.length >= COMPARE_MAX) return showError("You can compare up to " + COMPARE_MAX + " tickers at once.");
+  const btn = $("cmp-add-btn");
+  btn.disabled = true;
+  try {
+    // Always fetch the full window: render-time date alignment trims it to the
+    // visible range, so range switches never need to refetch comparisons.
+    const days = Math.max((State.fullHistory || []).length, 90);
+    const r = await fetch("/api/ticker/" + encodeURIComponent(symbol) + "?days=" + days);
+    if (!r.ok) throw new Error("not found");
+    const data = await r.json();
+    if (!data || !Array.isArray(data.history) || data.history.length < 2) throw new Error("no history");
+    State.compare.push({
+      symbol, name: data.name || symbol, price: data.price, change: data.change,
+      change_pct: data.change_pct, history: data.history,
+      color: COMPARE_COLORS[(State.compare.length + 1) % COMPARE_COLORS.length],
+    });
+    $("cmp-input").value = "";
+    renderChart(State.primaryHistory);
+  } catch {
+    showError("Could not load " + symbol + " for comparison.");
+  } finally {
+    btn.disabled = false;
+  }
+}
+function removeCompareTicker(symbol) {
+  State.compare = State.compare.filter((c) => c.symbol !== symbol);
+  if (State.primaryHistory) renderChart(State.primaryHistory);
+}
+$("cmp-add-btn").addEventListener("click", () => addCompareTicker($("cmp-input").value));
+$("cmp-input").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addCompareTicker($("cmp-input").value); } });
+$("compare-legend").addEventListener("click", (e) => {
+  const sym = e.target.getAttribute("data-remove");
+  if (sym) removeCompareTicker(sym);
+});
 
 /* ─────────────────── The full story (streamed essay) ─────────────────── */
 function startEssay() {
@@ -2757,6 +3192,7 @@ function renderPeers(peers) {
   const chips = peers.map((p) => {
     const cls = p.change_pct == null ? "mc-flat" : (p.change_pct >= 0 ? "mc-up" : "mc-down");
     return '<div class="peer-chip" data-peer="' + esc(p.symbol) + '">' +
+      logoHTML(p.symbol, 18) +
       '<span class="peer-sym">' + esc(p.symbol) + "</span>" +
       '<span class="peer-chg ' + cls + '">' + (p.change_pct != null ? fmtPct(p.change_pct, true) : "—") + "</span></div>";
   }).join("");
@@ -3059,7 +3495,7 @@ function renderCitations(cites) {
 }
 
 /* on load: show the portfolio if any holdings are saved, else the landing */
-loadPortfolio();
+applyRoute();
 symInput.focus();
 
 /* ─── Theme toggle ─── */

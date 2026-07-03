@@ -168,4 +168,42 @@ router.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user: req.user.toSafeJSON(), onboarded: (req.user.holdings?.length || 0) > 0 });
 });
 
+// PATCH /api/auth/password { currentPassword, newPassword } → re-hash with bcrypt.
+// Requires the current password so a hijacked but still-open session cannot
+// silently lock the real owner out.
+router.patch("/api/auth/password", loginLimiter, requireAuth, async (req, res) => {
+  const current = String(req.body?.currentPassword || "");
+  const next = String(req.body?.newPassword || "");
+  if (next.length < 8) return res.status(400).json({ detail: "New password must be at least 8 characters." });
+  try {
+    const ok = await req.user.verifyPassword(current);
+    if (!ok) return res.status(401).json({ detail: "Current password is incorrect." });
+    await req.user.setPassword(next);
+    await req.user.save();
+    res.json({ status: "ok", message: "Password updated." });
+  } catch (e) {
+    res.status(500).json({ detail: `Could not update password: ${e.message}` });
+  }
+});
+
+// DELETE /api/auth/account { password, confirmEmail } → permanently erases the
+// user's document (account, holdings, notes). Irreversible, so it requires both
+// the current password and the user typing their own email as confirmation.
+router.delete("/api/auth/account", loginLimiter, requireAuth, async (req, res) => {
+  const password = String(req.body?.password || "");
+  const confirmEmail = String(req.body?.confirmEmail || "").trim().toLowerCase();
+  if (confirmEmail !== req.user.email) {
+    return res.status(400).json({ detail: "Type your account email exactly to confirm." });
+  }
+  try {
+    const ok = await req.user.verifyPassword(password);
+    if (!ok) return res.status(401).json({ detail: "Password is incorrect." });
+    await User.deleteOne({ _id: req.user._id });
+    clearSessionCookie(res);
+    res.json({ status: "ok", message: "Account deleted." });
+  } catch (e) {
+    res.status(500).json({ detail: `Could not delete account: ${e.message}` });
+  }
+});
+
 export default router;

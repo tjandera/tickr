@@ -3,13 +3,18 @@
 import express from "express";
 const { Router } = express;
 import { runJson } from "../tools/pythonData.js";
+import { cached } from "../lib/cache.js";
 
 const router = Router();
 
+const TICKER_TTL_MS = 60_000; // market data is delayed anyway; 60s staleness is invisible
+
 router.get("/api/ticker/:symbol", async (req, res) => {
   const days = parseInt(req.query.days, 10) || 90;
+  const symbol = String(req.params.symbol || "").trim().toUpperCase();
   try {
-    const data = await runJson("ticker", { symbol: req.params.symbol, days });
+    const data = await cached(`ticker:${symbol}:${days}`, TICKER_TTL_MS, () =>
+      runJson("ticker", { symbol, days }));
     if (data && data.error) return res.status(400).json({ detail: data.error });
     res.json(data);
   } catch (e) {

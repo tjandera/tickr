@@ -159,6 +159,67 @@ def get_quick_quote(symbol: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def get_fast_overview(symbol: str) -> Optional[Dict[str, Any]]:
+    """Everything the portfolio overview needs from ONE fast chart call.
+
+    The heavy ``get_ticker_data`` path relies on yfinance ``.info``, which Yahoo
+    throttles hard (20s-4min hangs under load) — the cause of portfolio-page
+    latency and 500s. The chart endpoint with a 1y range returns price, previous
+    close, the display name, and enough candles to derive the 52-week range,
+    all in a single ~300ms request with a hard timeout.
+    """
+    if not symbol or not symbol.strip():
+        return None
+    try:
+        import requests
+        resp = requests.get(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol.upper()}",
+            params={"range": "1y", "interval": "1d"},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=6,
+        )
+        resp.raise_for_status()
+        result = (((resp.json().get("chart") or {}).get("result") or [{}])[0] or {})
+        meta = result.get("meta") or {}
+    except Exception:
+        return None
+
+    price = meta.get("regularMarketPrice")
+    try:
+        closes = ((result.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    except Exception:
+        closes = []
+    vals = [c for c in closes if c is not None]
+
+    # Previous close = the trading day BEFORE the latest candle. Careful: for a
+    # 1y range, meta.chartPreviousClose is the close from a year ago (the candle
+    # before the range starts), NOT yesterday — using it inflates the day change.
+    prev = meta.get("previousClose")
+    if not prev and len(vals) >= 2:
+        prev = vals[-2]
+    if not price and vals:
+        price = vals[-1]
+    if not price or not prev:
+        return None
+
+    # 52-week range: prefer meta fields, fall back to scanning the 1y candles.
+    hi = meta.get("fiftyTwoWeekHigh")
+    lo = meta.get("fiftyTwoWeekLow")
+    if (not hi or not lo) and vals:
+        hi, lo = max(vals), min(vals)
+
+    change = price - prev
+    return {
+        "symbol": symbol.upper(),
+        "name": meta.get("shortName") or meta.get("longName") or symbol.upper(),
+        "price": round(float(price), 2),
+        "change": round(change, 2),
+        "change_pct": round(change / prev * 100, 2),
+        "52w_high": round(float(hi), 2) if hi else None,
+        "52w_low": round(float(lo), 2) if lo else None,
+    }
+
+
 def search_tickers(query: str, limit: int = 6) -> List[Dict[str, Any]]:
     """Search for ticker symbols matching a company name or keyword."""
     try:

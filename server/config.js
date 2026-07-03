@@ -12,17 +12,11 @@ export const DEMO_DIR = resolve(STATIC_DIR, "demo");
 export const DATA_DIR = resolve(ROOT, "web", "data");
 export const DATA_CLI = resolve(SCRIPTS_DIR, "data_cli.py");
 
-// Prefer the project venv interpreter; fall back to PATH python3.
-export const PYTHON =
-  process.env.TICKR_PYTHON ||
-  (existsSync(resolve(ROOT, ".venv/bin/python"))
-    ? resolve(ROOT, ".venv/bin/python")
-    : "python3");
-
-export const PORT = parseInt(process.env.PORT || "3005", 10);
-
 // Load repo-root .env into process.env (same rules as web/app.py): existing
-// vars win, so anything already set in the shell takes precedence.
+// vars win, so anything already set in the shell takes precedence. Called
+// immediately below (not just by index.js) because ESM hoists imports: every
+// other module that imports config.js runs before index.js's own top-level
+// code, so PYTHON below must not depend on index.js calling loadEnv() first.
 export function loadEnv() {
   const envPath = resolve(ROOT, ".env");
   if (!existsSync(envPath)) return;
@@ -35,3 +29,14 @@ export function loadEnv() {
     if (!(key in process.env)) process.env[key] = val;
   }
 }
+loadEnv();
+
+// Prefer TICKR_PYTHON (set in .env — points outside iCloud, see start.sh),
+// then the project venv interpreter, then PATH python3.
+export const PYTHON =
+  process.env.TICKR_PYTHON ||
+  (existsSync(resolve(ROOT, ".venv/bin/python"))
+    ? resolve(ROOT, ".venv/bin/python")
+    : "python3");
+
+export const PORT = parseInt(process.env.PORT || "3005", 10);

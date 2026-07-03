@@ -88,7 +88,7 @@ def cmd_portfolio_overview(args) -> int:
     _quick_signal, and the JSON store.
     """
     from concurrent.futures import ThreadPoolExecutor
-    from lib.yahoo_finance import get_ticker_data
+    from lib.yahoo_finance import get_ticker_data, get_fast_overview
     from lib import store
     from finance_digest import _quick_signal
 
@@ -112,11 +112,16 @@ def cmd_portfolio_overview(args) -> int:
     def _enrich(h):
         row = {"ticker": h.get("ticker"), "shares": _num(h.get("shares")) or 0,
                "cost_basis": _num(h.get("cost_basis"))}
-        try:
-            d = get_ticker_data(h["ticker"], days=90)
-        except Exception:
-            row["error"] = True
-            return row
+        # Fast path first: one bounded chart call (~300ms). The old .info-based
+        # get_ticker_data hangs 20s+ under Yahoo throttling — keep it only as a
+        # fallback so an odd symbol the chart endpoint rejects still resolves.
+        d = get_fast_overview(h.get("ticker") or "")
+        if d is None:
+            try:
+                d = get_ticker_data(h["ticker"], days=90)
+            except Exception:
+                row["error"] = True
+                return row
         price = d.get("price")
         shares = row["shares"]
         cb = row["cost_basis"]

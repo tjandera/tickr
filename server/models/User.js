@@ -77,6 +77,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     email: this.email,
     emailVerified: this.emailVerified,
     holdings: this.holdings,
+    notesCount: (this.notes || []).length,
     createdAt: this.createdAt,
     lastLoginAt: this.lastLoginAt,
   };
