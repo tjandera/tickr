@@ -7,19 +7,23 @@ import express from "express";
 const { Router } = express;
 import * as store from "../store/store.js";
 import { runJson } from "../tools/pythonData.js";
-import { attachUser } from "../middleware/auth.js";
+import { attachUser, requireUserIfAccounts } from "../middleware/auth.js";
 import { cached, invalidatePrefix } from "../lib/cache.js";
+import { cleanSymbol, cleanNumber } from "../lib/validate.js";
+import { logError } from "../lib/log.js";
 
 const router = Router();
-router.use(attachUser); // sets req.user when a valid session exists, else null
+// Path-scoped (not bare router.use): routers are all mounted at the app root,
+// so unscoped middleware would run for every request that flows through on its
+// way to later routers — gating unrelated routes like /api/markets by mistake.
+router.use("/api/portfolio", attachUser, requireUserIfAccounts);
 
 const OVERVIEW_TTL_MS = 60_000;
+const MAX_HOLDINGS = 200; // sanity cap; also keeps the Mongo doc small
 const ownerKey = (req) => `pf:${req.user ? req.user._id.toString() : "local"}`;
 
-const num = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-};
+// Positive, finite, and below any real-world position size.
+const AMOUNT = { min: 0, max: 1e12 };
 
 router.get("/api/portfolio", (req, res) => {
   if (req.user) return res.json({ holdings: req.user.holdings || [] });
@@ -27,10 +31,10 @@ router.get("/api/portfolio", (req, res) => {
 });
 
 router.post("/api/portfolio", async (req, res) => {
-  const ticker = (req.body?.ticker || "").trim().toUpperCase();
-  if (!ticker) return res.status(400).json({ detail: "ticker is required" });
-  const shares = num(req.body?.shares) || 0;
-  const costBasis = num(req.body?.cost_basis);
+  const ticker = cleanSymbol(req.body?.ticker);
+  if (!ticker) return res.status(400).json({ detail: "Enter a valid ticker symbol (e.g. AAPL, BTC-USD)." });
+  const shares = cleanNumber(req.body?.shares, AMOUNT) || 0;
+  const costBasis = cleanNumber(req.body?.cost_basis, AMOUNT);
 
   if (req.user) {
     const u = req.user;
@@ -39,6 +43,9 @@ router.post("/api/portfolio", async (req, res) => {
       existing.shares = shares;
       existing.cost_basis = costBasis;
     } else {
+      if ((u.holdings || []).length >= MAX_HOLDINGS) {
+        return res.status(400).json({ detail: `Portfolio is full (max ${MAX_HOLDINGS} holdings).` });
+      }
       u.holdings.push({ ticker, shares, cost_basis: costBasis, added_at: new Date() });
     }
     await u.save();
@@ -87,7 +94,8 @@ router.get("/api/portfolio/overview", async (req, res) => {
     });
     res.json(data || { holdings: [], totals: {}, movers: [] });
   } catch (e) {
-    res.status(500).json({ detail: String(e.message || e) });
+    logError("portfolio.overview", e);
+    res.status(500).json({ detail: "Could not load the portfolio overview." });
   }
 });
 

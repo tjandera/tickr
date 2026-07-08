@@ -10,12 +10,21 @@ export function getCached(key) {
   return hit.value;
 }
 
+const MAX_ENTRIES = 1000;
+
 export function setCached(key, value, ttlMs) {
   store.set(key, { value, expires: Date.now() + ttlMs });
   // Opportunistic sweep so the map cannot grow unbounded.
   if (store.size > 500) {
     const now = Date.now();
     for (const [k, v] of store) if (now > v.expires) store.delete(k);
+  }
+  // Hard cap: if a flood of unique keys arrives inside one TTL window, the
+  // sweep above removes nothing (nothing has expired yet). Evict the oldest
+  // entries (Map iterates in insertion order) so memory stays bounded even
+  // under adversarial traffic.
+  while (store.size > MAX_ENTRIES) {
+    store.delete(store.keys().next().value);
   }
   return value;
 }

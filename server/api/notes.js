@@ -6,11 +6,19 @@ import express from "express";
 const { Router } = express;
 import { randomBytes } from "node:crypto";
 import * as store from "../store/store.js";
-import { attachUser } from "../middleware/auth.js";
+import { attachUser, requireUserIfAccounts } from "../middleware/auth.js";
 import { encrypt, decrypt } from "../lib/encryption.js";
+import { cleanSymbol, cleanUrl, cleanDate, capString } from "../lib/validate.js";
 
 const router = Router();
-router.use(attachUser);
+// Path-scoped — see the note in portfolio.js.
+router.use("/api/notes", attachUser, requireUserIfAccounts);
+
+// Field caps: generous for real use, small enough that no one can balloon
+// their user document toward Mongo's 16MB per-document limit.
+const MAX_TEXT = 5000;
+const MAX_HEADLINE = 300;
+const MAX_NOTES = 1000;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0);
@@ -37,16 +45,26 @@ router.get("/api/notes", (req, res) => {
 });
 
 router.post("/api/notes", async (req, res) => {
-  const text = (req.body?.text || "").trim();
+  const text = capString(req.body?.text, MAX_TEXT);
   if (!text) return res.status(400).json({ detail: "note text is required" });
+  // Validate everything up front so both storage paths get the same clean data.
+  // cleanUrl only accepts absolute http(s) URLs — a stored "javascript:" URL
+  // would otherwise come back to life inside an <a href> in the notes UI.
+  const date = cleanDate(req.body?.date);
+  const ticker = cleanSymbol(req.body?.ticker);
+  const headline = capString(req.body?.headline, MAX_HEADLINE);
+  const url = cleanUrl(req.body?.url);
 
   if (req.user) {
+    if ((req.user.notes || []).length >= MAX_NOTES) {
+      return res.status(400).json({ detail: `Notes are full (max ${MAX_NOTES}). Delete some to add more.` });
+    }
     const note = {
       id: randomBytes(6).toString("hex"),
-      date: req.body?.date || today(),
-      ticker: (req.body?.ticker || "").toUpperCase() || null,
-      headline: req.body?.headline || null,
-      url: req.body?.url || null,
+      date: date || today(),
+      ticker,
+      headline,
+      url,
       text: encrypt(text), // stored encrypted at rest
       created_at: new Date(),
     };
@@ -56,13 +74,7 @@ router.post("/api/notes", async (req, res) => {
     return res.json({ status: "ok", note: { ...note, text } });
   }
 
-  const note = store.addNote({
-    text,
-    date: req.body?.date || null,
-    ticker: req.body?.ticker || null,
-    headline: req.body?.headline || null,
-    url: req.body?.url || null,
-  });
+  const note = store.addNote({ text, date, ticker, headline, url });
   res.json({ status: "ok", note });
 });
 

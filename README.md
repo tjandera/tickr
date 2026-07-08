@@ -15,60 +15,47 @@ your position, and the latest news from every source — all in one place.
   StockTwits, SEC EDGAR). Pick the news window: Today / 7 / 15 / 30 days.
 - **Notes** — jot a note on any headline; browse them by day in a calendar journal.
 
-Every number comes from live market data (yfinance). The brief is written by a
-**local LLM** (Ollama + Qwen3 14B by default) — no API key, runs entirely on your
-machine. With no model reachable it still works using deterministic offline
-synthesis. Your holdings and notes are saved locally under `web/data/`.
+Every number comes from live market data (yfinance). The brief is written by
+**Gemini** (`GEMINI_API_KEY`); with no key or no credits the app still works,
+using deterministic offline synthesis. With MongoDB configured, users get real
+accounts (email verification + email-OTP 2FA) and their holdings/notes live on
+their own user document; without it, data is saved locally under `web/data/`.
 
 ---
 
 ## Setup
 
 ```bash
+# Python data tier
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+
+# Node server deps (also done automatically by server/start.sh)
+cd server && npm install
 ```
 
-### Local LLM (default synthesis backend)
+> **macOS + iCloud:** if this repo lives under `~/Documents`, keep `.venv` and
+> `server/node_modules` OUTSIDE iCloud (symlink them, and point `TICKR_PYTHON`
+> at the external interpreter) — iCloud-synced imports can stall for minutes.
 
-The brief is written by a **local LLM** served by [Ollama](https://ollama.com) —
-no API key, runs fully on your machine. Install Ollama, then start it and pull
-the model:
+### AI synthesis (Gemini)
 
-```bash
-ollama serve              # start the local server (leave running)
-ollama pull qwen3:14b     # ~9 GB; the default synthesis model
-```
+Set `GEMINI_API_KEY` in `.env` (from [aistudio.google.com](https://aistudio.google.com)).
+Optional; without it every brief uses the offline synthesis path.
 
-The app auto-detects the running model. Until a model is pulled, the app still
-works using the deterministic offline synthesis. To use a different model, set
-`LOCAL_MODEL` in `.env` (e.g. `gpt-oss:20b`, `llama3.1:8b`).
+### Accounts (MongoDB, optional)
 
-**Recommended models by machine (Apple Silicon, unified memory):**
-
-| RAM | Model | Pull |
-|---|---|---|
-| 16 GB | `llama3.1:8b` or `qwen3:8b` | `ollama pull qwen3:8b` |
-| 24 GB | `qwen3:14b` (default) | `ollama pull qwen3:14b` |
-| 32 GB+ | `gpt-oss:20b` or `qwen3:30b-a3b` | `ollama pull gpt-oss:20b` |
+Set `MONGODB_URI` + `JWT_SECRET` (and ideally `ENCRYPTION_KEY` + `RESEND_API`
+for real emails) to enable signup/login with email verification and OTP 2FA.
+Check the connection anytime with `cd server && npm run db:check`.
 
 ---
 
 ## Running the web app
 
-The easiest way — one command that starts Ollama (tuned for speed), makes sure
-the model is pulled and **warm**, then launches the app. Safe to re-run; it skips
-anything already running (no more "address already in use"):
-
-```bash
-./run.sh
-```
-
-Override the model or port with env vars: `LOCAL_MODEL=qwen3:8b PORT=8080 ./run.sh`.
-
-Or start it manually. The server is now **Node.js** (the Python connectors are the
-data tier, called via `scripts/data_cli.py`):
+The server is **Node.js** (the Python connectors are the data tier, called via
+`scripts/data_cli.py`):
 
 ```bash
 ./server/start.sh                 # Node server on port 3005 (installs deps if needed)
@@ -78,18 +65,15 @@ PORT=8080 ./server/start.sh       # different port
 cd web && ../.venv/bin/uvicorn app:app --port 3005
 ```
 
-Then open http://localhost:3005 in your browser. Enter a symbol such as `AAPL`,
-`BTC-USD`, or `NVDA` and the digest streams in as it is built: the price snapshot
-first, then research across every source, then the synthesized brief, then a
-streamed "The full story" essay.
-
-**Speed:** the app keeps the model resident (`OLLAMA_KEEP_ALIVE`) so repeat briefs
-don't pay a model-reload stall. The first brief after launch is warmed by `run.sh`.
+Then open http://localhost:3005. Logged-out visitors land on `/welcome` (the
+marketing page); the app itself lives at `/` behind the login when accounts are
+enabled. Enter a symbol such as `AAPL`, `BTC-USD`, or `NVDA` and the digest
+streams in as it is built: snapshot first, then research across every source,
+then the brief, then the "full story" essay.
 
 **If the first brief seems to hang for a minute:** that's `yfinance`'s first
 network call on a flaky connection — the app itself starts instantly and the
-stall, if any, only affects the first data fetch (it's cached afterward). Just
-wait or retry; a stable network makes it instant.
+stall, if any, only affects the first data fetch (it's cached afterward).
 
 ---
 
@@ -101,17 +85,51 @@ Copy the template and fill in what you have:
 cp .env.example .env
 ```
 
+`.env.example` documents every variable. The short version:
+
 | Variable | Required | Purpose |
 |---|---|---|
-| `LLM_BACKEND` | Optional | `ollama` (default) or `agnes`. Forces a specific synthesis backend. |
-| `OLLAMA_BASE_URL` | Optional | Local server URL. Defaults to `http://localhost:11434/v1`. |
-| `LOCAL_MODEL` | Optional | Local model name. Defaults to `qwen3:14b`. |
-| `AGNES_API_KEY` | Optional | Cloud fallback for synthesis. Only used if `LLM_BACKEND=agnes` or no local model is reachable. |
-| `BRAVE_API_KEY` | Optional | Improves web and Reddit results. Falls back to keyless sources when empty. |
+| `GEMINI_API_KEY` | Optional | AI-written briefs/essays. Without it: offline synthesis. |
+| `MONGODB_URI` | Optional | Enables accounts (verify + 2FA). Without it: local file store. |
+| `JWT_SECRET` | With accounts | Signs session tokens. Long random string. |
+| `ENCRYPTION_KEY` | Recommended | Encrypts note text at rest (falls back to `JWT_SECRET`). |
+| `RESEND_API` / `EMAIL_FROM` | Optional | Real verification/OTP emails. Without: logged to console. |
+| `APP_URL` | In production | Public https origin — enables Secure cookies + HSTS. |
+| `TRUST_PROXY` | Behind a proxy | Hop count so rate limiting sees real client IPs. |
+| `FINNHUB_API_KEY`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY` | Optional | Richer research panels. |
 
-The web app reads `.env` from the project root on startup. Values are injected
-only into the running app process. With no backend reachable at all, the app
-still serves grounded digests via deterministic offline synthesis.
+The server reads `.env` from the project root on startup; shell-set variables
+always win over the file.
+
+---
+
+## Security
+
+What the server enforces (see `server/middleware/` + `server/lib/validate.js`):
+
+- **Auth**: bcrypt-hashed passwords (cost 12), email verification before first
+  login, email-OTP 2FA on every login, httpOnly `SameSite=Lax` session cookies
+  (`Secure` on https), and hashed OTP/verification tokens — a database leak
+  exposes no usable secrets. Rate limits on login/OTP/signup.
+- **Data isolation**: with accounts enabled, `/api/portfolio`, `/api/notes`,
+  `/api/home`, and `/api/generate` require a session; the shared local file
+  store is only used in DB-less single-user mode. Note text is AES-256-GCM
+  encrypted at rest.
+- **Input validation**: one shared module (`lib/validate.js`) checks every
+  ticker symbol, day window, URL (http/https only), and free-text length
+  before anything reaches the Python tier, the DB, or a cache key.
+- **Resource limits**: per-IP rate limits on all APIs (tightest on briefs), a
+  concurrency cap + bounded queue on Python subprocesses, a hard cache-size
+  cap, and a 100kb JSON body limit.
+- **Headers**: CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy`,
+  `Permissions-Policy`, and HSTS when `APP_URL` is https.
+- **Output hygiene**: clients get generic error messages; real details go to
+  the server log. The frontend escapes all API data (`esc()`) and scheme-checks
+  every dynamic link (`safeUrl()`).
+
+**Deploy checklist**: set a strong `JWT_SECRET` + `ENCRYPTION_KEY`, set
+`APP_URL` to your https origin, set `TRUST_PROXY` if behind a proxy, and keep
+`.env` out of git (already ignored).
 
 ---
 
@@ -154,23 +172,27 @@ unchanged `index.html`.
 ```
 agnes-investor-desk/
 ├── server/                    Node.js server (the app)
-│   ├── index.js               Express app + static + routers
-│   ├── api/                   Routes: health, search, ticker, portfolio,
-│   │                          notes, demo, generate (SSE)
+│   ├── index.js               Express app: headers, limits, static, routers
+│   ├── api/                   Routes: health, auth, search, ticker, portfolio,
+│   │                          notes, demo, generate (SSE), home, markets
+│   ├── middleware/            auth (sessions + accounts gate), rateLimit,
+│   │                          securityHeaders (CSP etc.)
+│   ├── lib/                   db (Mongo), tokens (JWT/OTP), encryption (notes),
+│   │                          email (Resend), cache (TTL), validate, log
 │   ├── thinking/              AI: geminiClient, prompts, synthesize, essay
-│   ├── models/digest.js       Digest shape + coercion + dash-strip
-│   ├── tools/pythonData.js    Subprocess bridge to scripts/data_cli.py
-│   ├── store/store.js         JSON persistence for holdings + notes
+│   ├── models/                User (accounts) + digest shape/coercion
+│   ├── tools/pythonData.js    Subprocess bridge (+ concurrency cap)
+│   ├── store/store.js         JSON persistence for DB-less local mode
 │   └── start.sh               Launcher (PORT defaults to 3005)
 ├── web/
-│   ├── app.py                 Legacy FastAPI server (fallback, same routes)
-│   ├── data/                  Your saved holdings + notes (git-ignored)
-│   └── static/index.html      Single-page UI: portfolio, briefs, notes
+│   ├── app.py                 Legacy FastAPI server (fallback, no accounts)
+│   ├── data/                  Local-mode holdings + notes (git-ignored)
+│   └── static/                index.html (app) · welcome.html (marketing)
+│                              · auth.html (login/signup/OTP)
 └── scripts/
     ├── data_cli.py            Python data tier: JSON/NDJSON over the connectors
     ├── finance_digest.py      Research fan-out + builders + offline fallback
     └── lib/
-        ├── gemini_client.py   Gemini client (Python side)
         ├── store.py           JSON persistence (Python side)
         ├── yahoo_finance.py   Live prices, fundamentals, OHLCV history
         ├── finnhub_search.py · youtube_search.py
@@ -193,10 +215,10 @@ renders.
    Google News, the web (Brave), Reddit, StockTwits, SEC EDGAR filings, and the
    Yahoo earnings calendar — then merges them into one ranked, de-duplicated feed
    badged by platform.
-3. Synthesis. A local LLM writes a structured JSON brief grounded in the verified
+3. Synthesis. Gemini writes a structured JSON brief grounded in the verified
    numbers, then streams a plain-English "full story" essay. If the stock is in
    your portfolio, the brief is personalized to your position and gain/loss. With
-   no model reachable, a deterministic offline synthesis produces the same shape.
+   no key or credits, a deterministic offline synthesis produces the same shape.
    Real numbers always win over model output.
 4. Decision panels. Your position P&L, a risk read (volatility, 52-week position,
    support/resistance), and income (yield, ex-dividend, your income) are computed
@@ -206,10 +228,10 @@ renders.
 
 | Model | Role |
 |---|---|
-| `qwen3:14b` (local, default) | Brief synthesis + "full story" essay |
+| `gemini-2.5-flash` (default; override with `GEMINI_MODEL`) | Brief synthesis + "full story" essay |
 
-No image or video models — the dashboard is data and text only. See the Local LLM
-section above for model alternatives by RAM.
+No image or video models — the dashboard is data and text only. With no key or
+depleted credits, the deterministic offline path writes both instead.
 
 ### Connectors (wired into the brief)
 

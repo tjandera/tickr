@@ -315,11 +315,14 @@ async function doAddFirst(e) {
 }
 function finishOnboard() { window.location.href = "/"; }
 
-// --- on load: handle ?verified, and skip if already logged in ---
+// --- on load: handle ?verified / ?mode, and skip if already logged in ---
 (async function init() {
   const params = new URLSearchParams(location.search);
   if (params.get("verified") === "1") showMsg("Email confirmed. You can log in now.", "ok");
   else if (params.get("verified") === "0") showMsg("That verification link is invalid or expired. Try logging in to resend.", "err");
+
+  // Arriving from a "Get started" link → open the sign-up tab.
+  if (params.get("mode") === "signup") switchTab("signup");
 
   // Respect a saved theme from the main app.
   try {

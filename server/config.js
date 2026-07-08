@@ -8,6 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, "..");          // repo root
 export const SCRIPTS_DIR = resolve(ROOT, "scripts");
 export const STATIC_DIR = resolve(ROOT, "web", "static");
+export const VIEWS_DIR = resolve(ROOT, "server", "views");
 export const DEMO_DIR = resolve(STATIC_DIR, "demo");
 export const DATA_DIR = resolve(ROOT, "web", "data");
 export const DATA_CLI = resolve(SCRIPTS_DIR, "data_cli.py");

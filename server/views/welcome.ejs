@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickr - Your stocks, explained in plain English</title>
+<meta name="description" content="Tickr turns live market data, news, filings, and sentiment into a clear brief about your money.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tickr">
+<meta property="og:title" content="Tickr - Your stocks, explained in plain English">
+<meta property="og:description" content="Live market data and research context, turned into a clear plain-English brief.">
+<meta property="og:image" content="/static/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F7F7F2">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23171916'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='21' fill='%23F7F7F2'%3ET%3C/text%3E%3C/svg%3E">
+<script>try{if(localStorage.getItem("tickr-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
+<style>
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5/index.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5/index.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/playfair-display@5/index.css");
+
+:root {
+  --bg:#F7F7F2;
+  --surface:#FFFFFF;
+  --surface-2:#ECEFE8;
+  --ink:#171916;
+  --text:#252923;
+  --muted:#667060;
+  --faint:#899180;
+  --line:#D9DED3;
+  --line-strong:#B9C1B2;
+  --green:#1F7A3B;
+  --green-soft:#E7F3E8;
+  --blue:#285C8F;
+  --blue-soft:#E8F0F8;
+  --red:#A33B32;
+  --shadow:0 22px 60px rgba(34,38,31,.10);
+  --shadow-soft:0 12px 34px rgba(34,38,31,.08);
+  --sans:"Geist Variable",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  --mono:"Geist Mono Variable",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Playfair Display Variable",ui-serif,Georgia,serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --maxw:1180px;
+}
+
+[data-theme="dark"] {
+  --bg:#141611;
+  --surface:#1C1F19;
+  --surface-2:#24281F;
+  --ink:#F3F1E8;
+  --text:#E8E5D8;
+  --muted:#A7AE9B;
+  --faint:#7D8574;
+  --line:#30372B;
+  --line-strong:#46513E;
+  --green:#4ED06E;
+  --green-soft:rgba(78,208,110,.12);
+  --blue:#79A9D8;
+  --blue-soft:rgba(121,169,216,.12);
+  --red:#FF7068;
+  --shadow:0 26px 70px rgba(0,0,0,.32);
+  --shadow-soft:0 16px 40px rgba(0,0,0,.25);
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--text); font-family:var(--sans);
+  font-size:15.5px; line-height:1.65; -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before {
+  content:""; position:fixed; inset:0; z-index:-1;
+  background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:72px 72px; opacity:.16; pointer-events:none;
+}
+a { color:inherit; }
+button, input { font:inherit; }
+button { cursor:pointer; }
+img { max-width:100%; display:block; }
+.wrap { width:100%; max-width:var(--maxw); margin:0 auto; padding:0 clamp(22px, 5vw, 56px); }
+.band { padding:92px 0; border-top:1px solid var(--line); }
+.eyebrow {
+  font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:14px;
+}
+.section-title {
+  font-family:var(--serif); color:var(--ink); font-size:clamp(32px, 4.6vw, 52px);
+  line-height:1.04; font-weight:560; letter-spacing:0; max-width:740px;
+}
+.section-copy { color:var(--muted); max-width:620px; margin-top:18px; font-size:17px; }
+
+.nav {
+  position:sticky; top:0; z-index:30; border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(16px);
+}
+.nav-inner { height:66px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+.brand { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:760; }
+.brand-mark { width:30px; height:30px; border-radius:7px; background:var(--ink); color:var(--bg); display:grid; place-items:center; font-weight:800; }
+.links { display:flex; align-items:center; gap:24px; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.links a { text-decoration:none; }
+.links a:hover { color:var(--ink); }
+.nav-actions { display:flex; align-items:center; gap:10px; }
+.theme-btn {
+  width:38px; height:38px; border-radius:999px; border:1px solid var(--line-strong);
+  background:var(--surface); color:var(--ink); display:grid; place-items:center;
+}
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px;
+  border-radius:999px; border:1px solid var(--line-strong); padding:0 18px;
+  text-decoration:none; font-weight:680; color:var(--ink); background:var(--surface);
+  transition:transform .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease);
+}
+.btn:hover { transform:translateY(-1px); border-color:var(--ink); }
+.btn-primary { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.btn-lg { min-height:52px; padding:0 24px; font-size:16px; }
+
+.hero {
+  min-height:calc(100vh - 66px); position:relative; display:flex; align-items:flex-end;
+  padding:120px 0 54px; overflow:hidden; color:#F8F7EF; background:#171916;
+}
+.hero::before {
+  content:""; position:absolute; inset:0; background:url("/static/images/weight_scale.png") center right 10% / min(680px, 64vw) auto no-repeat;
+  opacity:.72;
+}
+.hero::after {
+  content:""; position:absolute; inset:0; background:rgba(17,20,15,.66);
+}
+.hero .wrap { position:relative; z-index:1; }
+.hero-grid { display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:48px; align-items:end; }
+.hero h1 {
+  font-family:var(--serif); font-size:clamp(48px, 7.4vw, 88px); line-height:.96;
+  font-weight:560; letter-spacing:0; max-width:870px; color:#FFFFFF;
+}
+.hero-copy { color:#D9DED3; max-width:650px; margin-top:24px; font-size:18px; }
+.hero-ctas { display:flex; flex-wrap:wrap; gap:12px; margin-top:34px; }
+.hero .btn:not(.btn-primary) { background:rgba(255,255,255,.08); color:#FFFFFF; border-color:rgba(255,255,255,.32); }
+.hero .btn-primary { background:#FFFFFF; color:#171916; border-color:#FFFFFF; }
+.hero-panel {
+  display:grid; gap:10px; padding:12px; border:1px solid rgba(255,255,255,.20);
+  background:rgba(255,255,255,.08); backdrop-filter:blur(12px); border-radius:10px;
+}
+.hero-stat {
+  min-height:82px; border:1px solid rgba(255,255,255,.16); border-radius:8px;
+  padding:14px 16px; background:rgba(0,0,0,.18);
+}
+.hero-stat span { display:block; font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#BFC6BA; }
+.hero-stat strong { display:block; color:#FFFFFF; font-size:26px; line-height:1.1; margin-top:8px; }
+.hero-stat small { color:#C9D1C3; font-family:var(--mono); font-size:12px; }
+
+.product-grid { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:stretch; margin-top:38px; }
+.product-visual {
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:24px;
+  box-shadow:var(--shadow-soft); display:grid; align-content:space-between; min-height:430px;
+}
+.quote-line { height:1px; background:var(--line); margin:20px 0; }
+.price-row { display:flex; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); }
+.price-row b { color:var(--ink); }
+.price-row .up { color:var(--green); }
+.product-copy {
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+}
+.feature-card {
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px;
+  box-shadow:var(--shadow-soft);
+}
+.feature-card h3 { color:var(--ink); font-size:16px; margin-top:10px; }
+.feature-card p { color:var(--muted); margin-top:8px; font-size:14px; }
+.feature-num { font-family:var(--mono); color:var(--blue); font-size:12px; letter-spacing:.12em; }
+
+.how-layout { margin-top:42px; display:grid; grid-template-columns:1fr minmax(220px, 320px) 1fr; gap:24px; align-items:center; }
+.step-list { display:grid; gap:16px; }
+.step-card {
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px;
+  box-shadow:var(--shadow-soft);
+}
+.step-card .tag { font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); }
+.step-card h3 { color:var(--ink); margin-top:10px; font-size:18px; }
+.step-card p { color:var(--muted); margin-top:8px; font-size:14.5px; }
+.statue-frame {
+  position:relative; min-height:420px; display:grid; place-items:center;
+}
+.statue-frame::before {
+  content:""; position:absolute; inset:12% 3% 6%; border-radius:50%;
+  border:1px solid var(--line); background:var(--surface-2);
+}
+.statue-frame img { position:relative; width:min(270px, 80%); filter:drop-shadow(0 22px 32px rgba(26,31,21,.14)); }
+.source-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+.source-pill {
+  min-height:62px; display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface);
+  color:var(--muted); font-family:var(--mono); font-size:12px;
+}
+
+.try-shell {
+  margin-top:34px; display:grid; grid-template-columns:minmax(0, 520px) 1fr; gap:30px; align-items:start;
+}
+.try-form {
+  display:flex; gap:10px; background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:6px; box-shadow:var(--shadow-soft);
+}
+.try-form input {
+  flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--ink);
+  padding:0 16px; font-family:var(--mono); text-transform:uppercase;
+}
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.chip {
+  border:1px solid var(--line); background:var(--surface); border-radius:999px; color:var(--muted);
+  padding:7px 12px; font-family:var(--mono); font-size:12px;
+}
+.try-result {
+  min-height:220px; background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:24px; box-shadow:var(--shadow-soft);
+}
+.try-empty { color:var(--muted); }
+.result-head { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:14px; }
+.result-head b { display:block; color:var(--ink); font-size:24px; }
+.result-head span { font-family:var(--mono); color:var(--muted); font-size:12px; }
+.result-list { display:grid; gap:10px; margin-top:12px; }
+.result-list div { padding:12px; border:1px solid var(--line); border-radius:8px; color:var(--muted); }
+.result-list b { color:var(--ink); }
+.err { color:var(--red); }
+
+.security-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-top:34px; }
+.security-item {
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px;
+}
+.security-item h3 { color:var(--ink); font-size:17px; }
+.security-item p { margin-top:8px; color:var(--muted); font-size:14px; }
+
+.faq-list { margin-top:34px; display:grid; gap:12px; max-width:820px; }
+.faq-item { background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.faq-q {
+  width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px;
+  background:transparent; color:var(--ink); border:0; padding:18px 20px; text-align:left; font-weight:700;
+}
+.faq-a { display:none; padding:0 20px 18px; color:var(--muted); }
+.faq-item.open .faq-a { display:block; }
+
+.footer { border-top:1px solid var(--line); padding:42px 0; color:var(--muted); }
+.footer-inner { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; }
+.footer-links { display:flex; gap:18px; flex-wrap:wrap; }
+.footer a { text-decoration:none; }
+
+[data-reveal] { opacity:0; transform:translateY(14px); transition:opacity .55s var(--ease), transform .55s var(--ease); }
+[data-reveal].in { opacity:1; transform:none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation:none !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+  [data-reveal] { opacity:1 !important; transform:none !important; }
+}
+@media (max-width:980px) {
+  .links { display:none; }
+  .hero { min-height:auto; padding:92px 0 46px; }
+  .hero::before { background-position:center top 18px; background-size:min(520px, 96vw) auto; opacity:.5; }
+  .hero-grid, .product-grid, .try-shell { grid-template-columns:1fr; }
+  .hero-panel { max-width:520px; }
+  .how-layout { grid-template-columns:1fr; }
+  .statue-frame { order:-1; min-height:300px; }
+  .source-grid, .security-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:640px) {
+  .nav-actions .btn { display:none; }
+  .hero h1 { font-size:44px; }
+  .product-copy, .source-grid, .security-grid { grid-template-columns:1fr; }
+  .try-form { border-radius:10px; flex-direction:column; padding:10px; }
+  .try-form input { min-height:44px; }
+  .try-form .btn { width:100%; }
+  .footer-inner { display:grid; }
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/welcome"><span class="brand-mark">T</span><span>Tickr</span></a>
+    <div class="links" aria-label="Primary">
+      <% nav.forEach((item) => { %>
+        <a href="<%= item.href %>"><%= item.label %></a>
+      <% }) %>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle theme">T</button>
+      <a class="btn" href="/auth">Log in</a>
+      <a class="btn btn-primary" href="/auth?mode=signup">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow" data-reveal>Market briefs for real positions</div>
+        <h1 data-reveal>Your stocks, explained in plain English.</h1>
+        <p class="hero-copy" data-reveal>Tickr turns prices, news, filings, and sentiment into a direct brief about what moved, why it matters, and what to watch next.</p>
+        <div class="hero-ctas" data-reveal>
+          <a class="btn btn-primary btn-lg" href="/auth?mode=signup">Create account</a>
+          <a class="btn btn-lg" href="#try">Try a ticker</a>
+        </div>
+      </div>
+      <aside class="hero-panel" aria-label="Product snapshot" data-reveal>
+        <% heroCards.forEach((card) => { %>
+          <div class="hero-stat">
+            <span><%= card.label %></span>
+            <strong><%= card.value %></strong>
+            <small><%= card.meta %></small>
+          </div>
+        <% }) %>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="band" id="product">
+    <div class="wrap">
+      <div class="eyebrow" data-reveal>Product</div>
+      <h2 class="section-title" data-reveal>A research dashboard that reads like a briefing note.</h2>
+      <p class="section-copy" data-reveal>Designed for scanning: the important movement, the evidence behind it, and the dates or levels that deserve your attention.</p>
+      <div class="product-grid">
+        <div class="product-visual" data-reveal>
+          <div>
+            <div class="eyebrow">Live brief</div>
+            <div class="price-row"><span>AAPL</span><b>$291.13</b><span class="up">+1.8%</span></div>
+            <div class="price-row"><span>Support</span><b>$246.40</b><span>watched</span></div>
+            <div class="price-row"><span>Next event</span><b>Jul 31</b><span>earnings</span></div>
+          </div>
+          <div>
+            <div class="quote-line"></div>
+            <p>Apple moved on stronger demand signals. For a saved position, Tickr explains the dollar impact and the next risk window.</p>
+          </div>
+        </div>
+        <div class="product-copy" data-reveal>
+          <div class="feature-card"><span class="feature-num">01</span><h3>Position-aware</h3><p>Briefs can reference your saved shares and cost basis instead of only generic market movement.</p></div>
+          <div class="feature-card"><span class="feature-num">02</span><h3>Source-grounded</h3><p>Research is assembled from market data and external context before the summary is written.</p></div>
+          <div class="feature-card"><span class="feature-num">03</span><h3>Plain language</h3><p>No terminal-style noise. The output is written for decisions, not data hoarding.</p></div>
+          <div class="feature-card"><span class="feature-num">04</span><h3>Fast preview</h3><p>Use the free ticker preview before creating an account or saving a portfolio.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="how">
+    <div class="wrap">
+      <div class="eyebrow" data-reveal>How it works</div>
+      <h2 class="section-title" data-reveal>From position to decision in three steps.</h2>
+      <p class="section-copy" data-reveal>Each brief follows a simple flow: save the context, gather the evidence, and read the decision layer without hunting through tabs.</p>
+      <div class="how-layout">
+        <div class="step-list" data-reveal>
+          <% steps.slice(0, 2).forEach((step) => { %>
+            <article class="step-card">
+              <div class="tag"><%= step.eyebrow %></div>
+              <h3><%= step.title %></h3>
+              <p><%= step.body %></p>
+            </article>
+          <% }) %>
+        </div>
+        <div class="statue-frame" data-reveal aria-hidden="true">
+          <img src="/static/images/statue_design.png" alt="" width="560" height="773" loading="lazy">
+        </div>
+        <div class="step-list" data-reveal>
+          <% steps.slice(2).forEach((step) => { %>
+            <article class="step-card">
+              <div class="tag"><%= step.eyebrow %></div>
+              <h3><%= step.title %></h3>
+              <p><%= step.body %></p>
+            </article>
+          <% }) %>
+          <div class="source-grid">
+            <% sourceCards.forEach((source) => { %>
+              <div class="source-pill"><%= source %></div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="try">
+    <div class="wrap">
+      <div class="eyebrow" data-reveal>Try it</div>
+      <h2 class="section-title" data-reveal>Preview any ticker without an account.</h2>
+      <div class="try-shell">
+        <div data-reveal>
+          <form class="try-form" id="try-form">
+            <input id="try-input" name="symbol" maxlength="16" autocomplete="off" spellcheck="false" placeholder="AAPL, NVDA, BTC-USD">
+            <button class="btn btn-primary" type="submit">Run preview</button>
+          </form>
+          <div class="chips" aria-label="Example tickers">
+            <% chips.forEach((chip) => { %>
+              <button class="chip" type="button" data-chip="<%= chip %>"><%= chip %></button>
+            <% }) %>
+          </div>
+        </div>
+        <div class="try-result" id="try-result" data-reveal>
+          <p class="try-empty">Enter a ticker to see price action, source-backed themes, and key levels.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="security">
+    <div class="wrap">
+      <div class="eyebrow" data-reveal>Security</div>
+      <h2 class="section-title" data-reveal>Built like account software, not a throwaway demo.</h2>
+      <div class="security-grid" data-reveal>
+        <div class="security-item"><h3>Hashed passwords</h3><p>Account passwords are hashed with bcrypt before storage.</p></div>
+        <div class="security-item"><h3>Email verification</h3><p>New accounts verify email ownership before full access.</p></div>
+        <div class="security-item"><h3>Scoped data</h3><p>Saved holdings and notes are scoped to the signed-in user.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <div class="wrap">
+      <div class="eyebrow" data-reveal>FAQ</div>
+      <h2 class="section-title" data-reveal>Common questions.</h2>
+      <div class="faq-list" data-reveal>
+        <% faqs.forEach((item) => { %>
+          <div class="faq-item">
+            <button class="faq-q" type="button"><span><%= item.q %></span><span>+</span></button>
+            <div class="faq-a"><%= item.a %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div>
+      <a class="brand" href="/welcome"><span class="brand-mark">T</span><span>Tickr</span></a>
+      <p>Information and research software, not financial advice.</p>
+    </div>
+    <div class="footer-links">
+      <a href="/auth">Log in</a>
+      <a href="/auth?mode=signup">Create account</a>
+      <a href="mailto:matthewtjandera@gmail.com">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+const root = document.documentElement;
+const themeBtn = document.getElementById("theme-btn");
+if (themeBtn) {
+  themeBtn.addEventListener("click", () => {
+    const dark = root.getAttribute("data-theme") !== "dark";
+    if (dark) root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    try { localStorage.setItem("tickr-theme", dark ? "dark" : "light"); } catch {}
+  });
+}
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (reduce) {
+  document.querySelectorAll("[data-reveal]").forEach((el) => el.classList.add("in"));
+} else {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.14 });
+  document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+}
+
+document.querySelectorAll(".faq-q").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const item = btn.closest(".faq-item");
+    item.classList.toggle("open");
+    btn.querySelector("span:last-child").textContent = item.classList.contains("open") ? "-" : "+";
+  });
+});
+
+function esc(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function money(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "n/a";
+  return num.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+}
+
+const form = document.getElementById("try-form");
+const input = document.getElementById("try-input");
+const result = document.getElementById("try-result");
+
+async function runTicker(symbol) {
+  const sym = String(symbol || "").trim().toUpperCase();
+  if (!sym) return;
+  input.value = sym;
+  result.innerHTML = '<p class="try-empty">Loading ' + esc(sym) + "...</p>";
+  try {
+    const res = await fetch("/api/ticker/" + encodeURIComponent(sym) + "?days=30");
+    if (!res.ok) throw new Error("Ticker not found");
+    const data = await res.json();
+    const snap = data.snapshot || {};
+    const levels = snap.key_levels || {};
+    const themes = (data.themes || []).slice(0, 3);
+    const change = Number(snap.change_pct || 0);
+    result.innerHTML =
+      '<div class="result-head"><div><span>' + esc(snap.symbol || sym) + '</span><b>' + esc(money(snap.price)) + '</b></div>' +
+      '<div><span>Move</span><b style="color:' + (change >= 0 ? "var(--green)" : "var(--red)") + '">' + esc((change >= 0 ? "+" : "") + change.toFixed(2) + "%") + '</b></div></div>' +
+      '<div class="result-list">' +
+      '<div><b>Support:</b> ' + esc(money(levels.support)) + ' &nbsp; <b>Resistance:</b> ' + esc(money(levels.resistance)) + '</div>' +
+      (themes.length ? themes.map((theme) => '<div><b>' + esc(theme.title) + ':</b> ' + esc(theme.synthesis) + '</div>').join("") : '<div>No themes returned yet.</div>') +
+      '</div>';
+  } catch (err) {
+    result.innerHTML = '<p class="err">Could not load "' + esc(sym) + '". Try AAPL, NVDA, or BTC-USD.</p>';
+  }
+}
+
+if (form) {
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runTicker(input.value);
+  });
+}
+document.querySelectorAll("[data-chip]").forEach((chip) => {
+  chip.addEventListener("click", () => runTicker(chip.getAttribute("data-chip")));
+});
+</script>
+</body>
+</html>

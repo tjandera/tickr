@@ -12,6 +12,10 @@ import { synthesize } from "../thinking/synthesize.js";
 import { streamEssay } from "../thinking/essay.js";
 import { stripDashes } from "../thinking/prompts.js";
 import { getCached, setCached } from "../lib/cache.js";
+import { attachUser, requireUserIfAccounts } from "../middleware/auth.js";
+import { generateLimiter } from "../middleware/rateLimit.js";
+import { cleanSymbol, clampInt, capString } from "../lib/validate.js";
+import { logError } from "../lib/log.js";
 
 // Research (snapshot + the 7-source fan-out) is the slowest phase, and its
 // output changes on the minute scale. A short cache makes a repeat brief of the
@@ -27,10 +31,13 @@ const SSE_HEADERS = {
   Connection: "keep-alive",
 };
 
-router.get("/api/generate", async (req, res) => {
-  const symbol = (req.query.symbol || "").toString().trim().toUpperCase();
-  const days = parseInt(req.query.days, 10) || 30;
-  const topic = req.query.topic ? String(req.query.topic) : null;
+// Gated: a brief is the most expensive call in the app (research subprocess +
+// paid AI tokens), so it is rate-limited per IP, and with accounts enabled it
+// requires a login — anonymous visitors get the free /api/ticker teaser instead.
+router.get("/api/generate", generateLimiter, attachUser, requireUserIfAccounts, async (req, res) => {
+  const symbol = cleanSymbol(req.query.symbol);
+  const days = clampInt(req.query.days, { min: 1, max: 365, fallback: 30 });
+  const topic = capString(req.query.topic, 120);
   const quick = req.query.quick === "true";
 
   res.writeHead(200, SSE_HEADERS);
@@ -46,7 +53,7 @@ router.get("/api/generate", async (req, res) => {
   const send = (obj) => { if (!closed && !res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
 
   if (!symbol) {
-    send({ type: "error", message: "Please enter a ticker symbol or topic to begin.", fatal: true });
+    send({ type: "error", message: "Please enter a valid ticker symbol (e.g. AAPL, BTC-USD).", fatal: true });
     send({ type: "done" });
     return res.end();
   }
@@ -100,7 +107,8 @@ router.get("/api/generate", async (req, res) => {
         live = true;
         if (!digest.tldr) throw new Error("empty tldr");
       } catch (e) {
-        send({ type: "status", message: `Synthesis fell back to offline mode: ${e.message || e}` });
+        logError("generate.synthesis", e);
+        send({ type: "status", message: "Synthesis fell back to offline mode." });
         digest = offline_digest;
         fallback = true;
       }
@@ -167,7 +175,8 @@ router.get("/api/generate", async (req, res) => {
 
     finish();
   } catch (e) {
-    send({ type: "error", message: String(e.message || e), fatal: true });
+    logError("generate", e);
+    send({ type: "error", message: "The brief could not be generated. Please try again.", fatal: true });
     finish();
   }
 });

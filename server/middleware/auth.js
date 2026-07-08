@@ -40,3 +40,15 @@ export async function attachUser(req, res, next) {
   req.user = await resolveUser(req);
   next();
 }
+
+// Personal-data gate. With accounts enabled (DB connected), anonymous requests
+// must NOT fall through to the shared local file store — on a deployed server
+// that would let any visitor read and write the same data. With no DB (local,
+// single-user mode) the file store is exactly what we want, so pass through.
+// Run after attachUser.
+export function requireUserIfAccounts(req, res, next) {
+  if (isDBConnected() && !req.user) {
+    return res.status(401).json({ detail: "Please log in." });
+  }
+  next();
+}

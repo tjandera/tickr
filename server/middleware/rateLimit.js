@@ -20,3 +20,12 @@ export const otpLimiter = opts(15 * 60 * 1000, 10, "Too many attempts. Request a
 
 // 5 new accounts per hour per IP.
 export const signupLimiter = opts(60 * 60 * 1000, 5, "Too many signups from this network. Try again later.");
+
+// General ceiling for all /api routes: generous for the SPA's real usage
+// (40 req/min sustained) but stops a naive flood from monopolizing the
+// Python data tier or the cache.
+export const apiLimiter = opts(15 * 60 * 1000, 600, "Too many requests. Please slow down.");
+
+// Briefs are the most expensive call in the app (multi-minute research
+// subprocess + paid AI tokens), so they get their own tight budget.
+export const generateLimiter = opts(15 * 60 * 1000, 20, "Too many briefs requested. Try again in a few minutes.");

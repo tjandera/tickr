@@ -900,6 +900,43 @@ main { padding-bottom: 80px; }
 .acct-confirm .ah-in { width: 100%; max-width: 320px; }
 .acct-confirm-actions { display: flex; gap: 10px; }
 
+/* ─────────── Today (home) ─────────── */
+.mkt-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.mkt-chip { display: inline-flex; align-items: baseline; gap: 9px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 9px 16px; }
+.mkt-name { font-size: 12px; color: var(--muted); font-weight: 500; }
+.mkt-px { font-family: var(--mono); font-size: 13px; color: var(--paper); }
+.mkt-chg { font-family: var(--mono); font-size: 12px; }
+.mkt-chg.up { color: var(--up); } .mkt-chg.down { color: var(--down); } .mkt-chg.flat { color: var(--slate); }
+
+.home-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 760px) { .home-grid { grid-template-columns: 1fr; } }
+.home-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px; }
+.home-card-wide { margin-bottom: 14px; }
+.home-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.home-card-title { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-dim); }
+.home-link { background: none; border: none; color: var(--muted); font-family: var(--sans); font-size: 12.5px; cursor: pointer; padding: 4px 10px; border-radius: var(--r-pill); transition: all .15s; }
+.home-link:hover { color: var(--paper); background: var(--ink2); }
+
+.hpf-value { font-family: var(--mono); font-size: 30px; color: var(--paper); letter-spacing: -.01em; }
+.hpf-sub { display: flex; gap: 16px; margin-top: 6px; font-family: var(--mono); font-size: 13px; }
+.hpf-sub .up { color: var(--up); } .hpf-sub .down { color: var(--down); } .hpf-sub .muted { color: var(--muted); }
+.hpf-movers { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+.hpf-mover { display: inline-flex; align-items: center; gap: 7px; background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 5px 13px 5px 6px; cursor: pointer; font-family: var(--mono); font-size: 12px; color: var(--paper); transition: border-color .15s; }
+.hpf-mover:hover { border-color: var(--line2); }
+
+.hev-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.hev-row:last-child { border-bottom: none; }
+.hev-days { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--paper); background: var(--ink2); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 4px 11px; white-space: nowrap; }
+.hev-text { font-size: 13.5px; color: var(--paper-dim); }
+.hev-text b { color: var(--paper); font-family: var(--mono); font-weight: 600; }
+
+.hnews-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+.hnews-row:last-child { border-bottom: none; }
+.hnews-title { font-size: 13.5px; color: var(--paper); line-height: 1.45; flex: 1; }
+.hnews-row:hover .hnews-title { text-decoration: underline; text-underline-offset: 3px; }
+.hnews-meta { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.home-empty { color: var(--muted); font-size: 13px; padding: 6px 0; }
+
 /* ─────────── Modal ─────────── */
 .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(6,7,9,.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line2); border-radius: 16px; padding: 24px 26px; box-shadow: 0 24px 80px rgba(0,0,0,.5); }
@@ -1065,6 +1102,7 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
     </div>
 
     <nav class="navlinks">
+      <button class="navlink" id="nav-home">Home</button>
       <button class="navlink" id="nav-portfolio">Portfolio</button>
       <button class="navlink" id="nav-notes">Notes</button>
       <button class="navlink" id="nav-account" style="display:none">Account</button>
@@ -1098,9 +1136,9 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
       </span>
     </button>
 
-    <div class="health" id="health">
+    <div class="health" id="health" style="display:none">
       <span class="lamp" id="health-lamp"></span>
-      <span id="health-text">checking</span>
+      <span id="health-text"></span>
     </div>
   </div>
 
@@ -1122,6 +1160,51 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 </section>
 
 <main class="wrap" id="main">
+
+  <!-- ============ Today (home) ============ -->
+  <section class="pview" id="home-view" style="display:none">
+    <div class="pv-head">
+      <div class="pv-headline">
+        <span class="kicker" id="home-kicker">Today</span>
+        <h1 class="pv-h1" id="home-greeting">Good morning</h1>
+        <div class="pv-moverline" id="home-date"></div>
+      </div>
+    </div>
+
+    <div class="mkt-strip" id="mkt-strip"></div>
+
+    <div class="home-grid">
+      <div class="home-card" id="home-pf-card">
+        <div class="home-card-head">
+          <span class="home-card-title">Your portfolio</span>
+          <button class="home-link" data-nav="portfolio">Open →</button>
+        </div>
+        <div id="home-pf-body"></div>
+      </div>
+
+      <div class="home-card">
+        <div class="home-card-head">
+          <span class="home-card-title">Coming up</span>
+        </div>
+        <div id="home-events"></div>
+      </div>
+    </div>
+
+    <div class="home-card home-card-wide">
+      <div class="home-card-head">
+        <span class="home-card-title">Latest on your stocks</span>
+      </div>
+      <div id="home-headlines"></div>
+    </div>
+
+    <div class="home-card home-card-wide" id="home-notes-card" style="display:none">
+      <div class="home-card-head">
+        <span class="home-card-title">Recent notes</span>
+        <button class="home-link" data-nav="notes">All notes →</button>
+      </div>
+      <div id="home-notes"></div>
+    </div>
+  </section>
 
   <!-- ============ My Portfolio (home) ============ -->
   <section class="pview" id="portfolio-view" style="display:none">
@@ -1432,14 +1515,15 @@ body.drawer-pinned .notes-drawer { box-shadow: none; }
 
 /* ─────────────────── Auth guard ───────────────────
    When accounts are enabled (MongoDB connected), the app requires a valid
-   session and sends anonymous visitors to /auth. When accounts are disabled
-   (no DB), the app stays open and uses the local file store, exactly as before. */
+   session and sends anonymous visitors to the marketing homepage (/welcome).
+   When accounts are disabled (no DB), the app stays open and uses the local
+   file store, exactly as before. */
 (async function authGuard() {
   try {
     const h = await fetch("/api/health").then((r) => r.json()).catch(() => ({}));
     if (!h.accounts) return; // accounts off → open app
     const me = await fetch("/api/auth/me");
-    if (!me.ok) return window.location.replace("/auth");
+    if (!me.ok) return window.location.replace("/welcome");
     const accountNav = document.getElementById("nav-account");
     if (accountNav) accountNav.style.display = "";
   } catch { /* network hiccup: do not lock the user out */ }
@@ -1512,6 +1596,13 @@ function esc(s) {
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+// For href/src values. esc() stops HTML injection but not "javascript:" URLs,
+// so anything from the API that lands in a link goes through this instead:
+// absolute http(s) only, everything else becomes an inert "#".
+function safeUrl(u) {
+  const s = String(u == null ? "" : u).trim();
+  return /^https?:\/\//i.test(s) ? esc(s) : "#";
+}
 function setText(el, s) { el.textContent = (s == null ? "" : String(s)); }
 
 function fmtLarge(n) {
@@ -1555,19 +1646,24 @@ function moneySigned(n) {
 }
 function gainCls(v) { return v == null ? "muted" : (v >= 0 ? "up" : "down"); }
 
-/* ─────────────────── Health ─────────────────── */
+/* ─────────────────── Health ───────────────────
+   Users don't care which model powers the brief — the indicator only appears
+   when something is actually degraded (AI offline), and stays hidden when
+   everything works. */
 (async function checkHealth() {
+  const chip = $("health");
   try {
     const r = await fetch("/api/health");
     const d = await r.json();
     if (d && (d.live || d.gemini || d.agnes)) {
-      healthLamp.classList.add("ok");
-      setText(healthText, d.model ? ("live · " + d.model) : "live");
+      chip.style.display = "none";
     } else {
+      chip.style.display = "";
       healthLamp.classList.add("bad");
       setText(healthText, "offline mode");
     }
   } catch {
+    chip.style.display = "";
     healthLamp.classList.add("bad");
     setText(healthText, "offline");
   }
@@ -1619,10 +1715,12 @@ async function openDemo(key) {
 /* ─────────────────── Views + Portfolio ─────────────────── */
 function showView(name) {
   landing.style.display = (name === "landing") ? "block" : "none";
+  $("home-view").style.display = (name === "home") ? "block" : "none";
   $("portfolio-view").style.display = (name === "portfolio") ? "block" : "none";
   $("notes-view").style.display = (name === "notes") ? "block" : "none";
   $("account-view").style.display = (name === "account") ? "block" : "none";
   digestRoot.style.display = (name === "brief") ? "block" : "none";
+  $("nav-home").classList.toggle("on", name === "home");
   $("nav-portfolio").classList.toggle("on", name === "portfolio");
   $("nav-notes").classList.toggle("on", name === "notes");
   $("nav-account").classList.toggle("on", name === "account");
@@ -1635,6 +1733,137 @@ const PF_CACHE_KEY = "tickr-pf-cache";
 function readPfCache() {
   try { return JSON.parse(localStorage.getItem(PF_CACHE_KEY) || "null"); } catch { return null; }
 }
+
+/* ─────────────────── Today (home) ─────────────────── */
+async function loadHome() {
+  if (State.running) return;
+  const nav = ++State.navSeq;
+  resetView();
+  showView("home");
+  renderHomeGreeting();
+  // Instant paint from the portfolio snapshot; markets/events fill in behind.
+  const cachedPf = readPfCache();
+  if (cachedPf) renderHomePf(cachedPf);
+  else $("home-pf-body").innerHTML = '<div class="home-empty">Loading your portfolio…</div>';
+  if (!$("mkt-strip").childElementCount) $("mkt-strip").innerHTML = '<div class="home-empty">Loading markets…</div>';
+  $("home-events").innerHTML = '<div class="home-empty">Checking your calendar…</div>';
+  $("home-headlines").innerHTML = '<div class="home-empty">Gathering headlines…</div>';
+
+  const [homeR, pfR, notesR] = await Promise.allSettled([
+    fetch("/api/home"), fetch("/api/portfolio/overview"), fetch("/api/notes"),
+  ]);
+  if (nav !== State.navSeq) return; // user navigated away mid-load
+
+  if (homeR.status === "fulfilled" && homeR.value.ok) {
+    try {
+      const h = await homeR.value.json();
+      if (nav !== State.navSeq) return;
+      renderMktStrip(h.indices || []);
+      renderHomeEvents(h.events || []);
+      renderHomeHeadlines(h.headlines || []);
+    } catch { /* leave placeholders */ }
+  }
+  if (pfR.status === "fulfilled" && pfR.value.ok) {
+    try {
+      const data = await pfR.value.json();
+      if (nav !== State.navSeq) return;
+      if ((data.holdings || []).length) writePfCache(data);
+      renderHomePf(data);
+    } catch { /* cached paint stays */ }
+  }
+  if (notesR.status === "fulfilled" && notesR.value.ok) {
+    try {
+      const n = await notesR.value.json();
+      if (nav !== State.navSeq) return;
+      renderHomeNotes((n.notes || []).slice(0, 3));
+    } catch { /* card stays hidden */ }
+  }
+}
+function renderHomeGreeting() {
+  const now = new Date();
+  const h = now.getHours();
+  const word = h < 12 ? "Good morning" : (h < 18 ? "Good afternoon" : "Good evening");
+  setText($("home-greeting"), word);
+  setText($("home-date"), now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }));
+}
+function renderMktStrip(indices) {
+  const host = $("mkt-strip");
+  if (!indices.length) { host.innerHTML = '<div class="home-empty">Market data is unavailable right now.</div>'; return; }
+  host.innerHTML = indices.map((q) => {
+    const cls = q.change_pct == null ? "flat" : (q.change_pct >= 0 ? "up" : "down");
+    const arrow = cls === "up" ? "▲" : (cls === "down" ? "▼" : "");
+    return '<div class="mkt-chip"><span class="mkt-name">' + esc(q.label || q.symbol) + '</span>' +
+      '<span class="mkt-px">' + Number(q.price).toLocaleString("en-US", { maximumFractionDigits: 2 }) + '</span>' +
+      '<span class="mkt-chg ' + cls + '">' + arrow + " " + fmtPct(Math.abs(q.change_pct)) + "</span></div>";
+  }).join("");
+}
+function renderHomePf(data) {
+  const host = $("home-pf-body");
+  const holds = (data && data.holdings) || [];
+  if (!holds.length) {
+    host.innerHTML = '<div class="home-empty">No holdings yet.</div>' +
+      '<div class="hpf-movers"><button class="hpf-mover" data-nav="portfolio">＋ Add your first holding</button></div>';
+    return;
+  }
+  const t = data.totals || {};
+  const day = t.day_change_value;
+  const dayCls = day == null ? "muted" : (day >= 0 ? "up" : "down");
+  const gain = t.gain_pct;
+  const gainCls2 = gain == null ? "muted" : (gain >= 0 ? "up" : "down");
+  const movers = [...holds].filter((x) => x.change_pct != null)
+    .sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct)).slice(0, 3);
+  host.innerHTML =
+    '<div class="hpf-value">' + moneyFmt(t.value) + "</div>" +
+    '<div class="hpf-sub">' +
+      '<span class="' + dayCls + '">' + (day == null ? "—" : moneySigned(day) + " today") + "</span>" +
+      '<span class="' + gainCls2 + '">' + (gain == null ? "" : fmtPct(gain, true) + " all time") + "</span>" +
+    "</div>" +
+    '<div class="hpf-movers">' + movers.map((m) => {
+      const cls = m.change_pct >= 0 ? "up" : "down";
+      return '<button class="hpf-mover" data-open="' + esc(m.ticker) + '">' + logoHTML(m.ticker, 20) +
+        esc(m.ticker) + ' <span class="mkt-chg ' + cls + '">' + fmtPct(m.change_pct, true) + "</span></button>";
+    }).join("") + "</div>";
+}
+function renderHomeEvents(events) {
+  const host = $("home-events");
+  if (!events.length) { host.innerHTML = '<div class="home-empty">No earnings or dividend dates in the next 45 days.</div>'; return; }
+  host.innerHTML = events.map((e) => {
+    const when = e.days === 0 ? "today" : (e.days === 1 ? "tomorrow" : "in " + e.days + "d");
+    let dateLabel = e.date;
+    try { dateLabel = new Date(e.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch {}
+    return '<div class="hev-row"><span class="hev-days">' + esc(when) + '</span>' +
+      '<span class="hev-text"><b>' + esc(e.ticker) + "</b> " + esc(e.kind) + " · " + esc(dateLabel) + "</span></div>";
+  }).join("");
+}
+function renderHomeHeadlines(items) {
+  const host = $("home-headlines");
+  if (!items.length) { host.innerHTML = '<div class="home-empty">Nothing new on your holdings in the past few days.</div>'; return; }
+  host.innerHTML = items.map((n) =>
+    '<a class="hnews-row" href="' + safeUrl(n.url) + '" target="_blank" rel="noopener">' +
+      logoHTML(n.ticker, 22) +
+      '<span class="hnews-title">' + esc(n.title) + "</span>" +
+      '<span class="hnews-meta">' + esc(n.publisher || "") + (n.age ? " · " + esc(n.age) : "") + "</span></a>"
+  ).join("");
+}
+function renderHomeNotes(notes) {
+  const card = $("home-notes-card");
+  if (!notes.length) { card.style.display = "none"; return; }
+  card.style.display = "";
+  $("home-notes").innerHTML = notes.map((n) =>
+    '<div class="hev-row">' + (n.ticker ? '<span class="hev-days">' + esc(n.ticker) + "</span>" : "") +
+      '<span class="hev-text">' + esc((n.text || "").slice(0, 120)) + "</span></div>"
+  ).join("");
+}
+// One delegated handler: internal nav links + "open a brief" mover chips.
+$("home-view").addEventListener("click", (e) => {
+  const navTo = e.target.closest("[data-nav]");
+  if (navTo) { navigate(navTo.getAttribute("data-nav")); return; }
+  const open = e.target.closest("[data-open]");
+  if (open) {
+    symInput.value = open.getAttribute("data-open");
+    startGenerate();
+  }
+});
 function writePfCache(data) {
   try { localStorage.setItem(PF_CACHE_KEY, JSON.stringify(data)); } catch { /* storage full */ }
 }
@@ -1918,7 +2147,7 @@ function renderNotes(notes) {
 }
 function noteCardHTML(n) {
   const head = n.headline
-    ? '<div class="nc-head">' + (n.url ? '<a href="' + esc(n.url) + '" target="_blank" rel="noopener">' + esc(n.headline) + "</a>" : esc(n.headline)) + "</div>"
+    ? '<div class="nc-head">' + (n.url ? '<a href="' + safeUrl(n.url) + '" target="_blank" rel="noopener">' + esc(n.headline) + "</a>" : esc(n.headline)) + "</div>"
     : "";
   let time = "";
   try { time = new Date(n.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); } catch {}
@@ -1957,11 +2186,12 @@ function applyRoute() {
   const h = (location.hash || "").replace("#", "");
   if (h === "notes") { loadNotes(); return; }
   if (h === "account") { loadAccount(); return; }
-  resetView();
-  loadPortfolio();
+  if (h === "portfolio") { resetView(); loadPortfolio(); return; }
+  loadHome(); // "" and #home — the default landing view
 }
 window.addEventListener("hashchange", applyRoute);
 
+$("nav-home").addEventListener("click", () => navigate("home"));
 $("nav-notes").addEventListener("click", () => navigate("notes"));
 $("nav-portfolio").addEventListener("click", () => navigate("portfolio"));
 $("new-note-btn").addEventListener("click", () => openNoteModal({}));
@@ -2104,7 +2334,7 @@ function setDrawerContext(ctx) {
   if (Drawer.ctx.headline) {
     ctxEl.style.display = "block";
     ctxEl.innerHTML = (Drawer.ctx.url
-      ? '<a href="' + esc(Drawer.ctx.url) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">' + esc(Drawer.ctx.headline) + "</a>"
+      ? '<a href="' + safeUrl(Drawer.ctx.url) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">' + esc(Drawer.ctx.headline) + "</a>"
       : esc(Drawer.ctx.headline));
     clr.style.display = "inline";
   } else {
@@ -2140,7 +2370,7 @@ function drawerNoteHTML(nt) {
            d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   } catch {}
   const hl = nt.headline
-    ? '<div class="nd-note-hl">' + (nt.url ? '<a href="' + esc(nt.url) + '" target="_blank" rel="noopener">' + esc(nt.headline) + "</a>" : esc(nt.headline)) + "</div>"
+    ? '<div class="nd-note-hl">' + (nt.url ? '<a href="' + safeUrl(nt.url) + '" target="_blank" rel="noopener">' + esc(nt.headline) + "</a>" : esc(nt.headline)) + "</div>"
     : "";
   return '<div class="nd-note">' +
     '<div class="nd-note-top"><span class="nd-note-time">' + esc(time) + "</span>" +
@@ -2211,7 +2441,7 @@ $("window-seg").querySelectorAll("button").forEach((b) => {
   });
 });
 
-$("brand-home").addEventListener("click", () => navigate("portfolio"));
+$("brand-home").addEventListener("click", () => navigate("home"));
 
 symInput.addEventListener("keydown", (e) => { if (e.key === "Enter") startGenerate(); });
 runBtn.addEventListener("click", startGenerate);
@@ -3217,7 +3447,7 @@ function renderVideo(v) {
     '<div class="vc-body"><div class="vc-kicker">▶ Watch · a quick rundown</div>' +
     '<div class="vc-title">' + esc(v.title || "Video explainer") + "</div>" +
     '<div class="vc-meta">' + esc(meta) + "</div></div>";
-  host.setAttribute("href", v.url);
+  host.setAttribute("href", /^https?:\/\//i.test(v.url) ? v.url : "#"); // scheme check: API URL lands in a live link
   host.style.display = "flex";
 }
 
@@ -3313,10 +3543,8 @@ function renderByline(meta) {
   }
   const winLabel = (meta.window && meta.window.label) || (meta.days ? ("past " + meta.days + " days") : null);
   if (winLabel) bits.push('<span class="window-tag">' + esc(winLabel) + "</span>");
-  if (meta.model && meta.model !== "offline") bits.push('<span>' + esc(meta.model) + "</span>");
-  if (meta.live === true) bits.push('<span class="live-tag">live</span>');
-  else bits.push('<span class="fallback-tag">offline mode</span>');
-  if (meta.elapsed_s != null) bits.push('<span>built in ' + esc(Number(meta.elapsed_s).toFixed(1)) + "s</span>");
+  // No model/backend branding in the byline — only flag the degraded case.
+  if (meta.live !== true) bits.push('<span class="fallback-tag">offline mode</span>');
   el.innerHTML = bits.join('<span class="pip"></span>');
 }
 
@@ -3437,7 +3665,7 @@ function renderFeed(items) {
     const row = document.createElement("div");
     row.className = "news-row";
     row.innerHTML =
-      '<a class="nr-main" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' +
+      '<a class="nr-main" href="' + safeUrl(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<div class="feed-top">' +
           '<span class="feed-badge p-' + esc(plat) + '">' + esc(platLabel) + "</span>" +
           '<span class="news-title">' + esc(n.title || "Untitled") + "</span>" +
@@ -3451,7 +3679,7 @@ function renderFeed(items) {
       "</a>" +
       '<div class="nr-actions">' +
         '<button class="feed-note-btn" data-note-title="' + esc(n.title || "") + '" data-note-url="' + esc(url) + '">＋ Note</button>' +
-        '<a class="news-link" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Open →</a>' +
+        '<a class="news-link" href="' + safeUrl(url) + '" target="_blank" rel="noopener noreferrer">Open →</a>' +
       "</div>";
     host.appendChild(row);
   });

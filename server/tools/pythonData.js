@@ -6,6 +6,37 @@
 import { spawn } from "node:child_process";
 import { PYTHON, DATA_CLI } from "../config.js";
 
+// Concurrency gate. Each call spawns a Python process that can run for seconds
+// (research: minutes), so without a cap a burst of requests fork-bombs the box.
+// At most MAX_CHILDREN run at once; a bounded queue absorbs small bursts and
+// anything beyond that fails fast instead of piling up.
+const MAX_CHILDREN = clampEnvInt("PY_MAX_CONCURRENCY", 4, 1, 32);
+const MAX_QUEUE = clampEnvInt("PY_MAX_QUEUE", 16, 0, 200);
+let running = 0;
+const waiting = [];
+
+function clampEnvInt(name, fallback, min, max) {
+  const n = parseInt(process.env[name], 10);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}
+
+function acquireSlot() {
+  if (running < MAX_CHILDREN) {
+    running += 1;
+    return Promise.resolve();
+  }
+  if (waiting.length >= MAX_QUEUE) {
+    return Promise.reject(new Error("server is busy — too many data requests, try again shortly"));
+  }
+  return new Promise((resolve) => waiting.push(resolve));
+}
+
+function releaseSlot() {
+  const next = waiting.shift();
+  if (next) next(); // hand the slot straight to the next waiter (running stays the same)
+  else running -= 1;
+}
+
 function buildArgs(cmd, { symbol, days, topic, quick, holdingsStdin } = {}) {
   const args = [DATA_CLI, cmd];
   if (symbol != null) args.push(String(symbol));
@@ -18,7 +49,10 @@ function buildArgs(cmd, { symbol, days, topic, quick, holdingsStdin } = {}) {
 
 // Run a command that prints one JSON object on stdout. Pass `input` to write a
 // payload (e.g. a user's holdings JSON) to the child's stdin.
-export function runJson(cmd, opts = {}, { timeoutMs = 120000, input = null } = {}) {
+export async function runJson(cmd, opts = {}, { timeoutMs = 120000, input = null } = {}) {
+  await acquireSlot();
+  let released = false;
+  const release = () => { if (!released) { released = true; releaseSlot(); } };
   return new Promise((resolve, reject) => {
     const child = spawn(PYTHON, buildArgs(cmd, opts), { cwd: process.cwd() });
     let out = "";
@@ -36,10 +70,12 @@ export function runJson(cmd, opts = {}, { timeoutMs = 120000, input = null } = {
     child.stderr.on("data", (d) => (err += d));
     child.on("error", (e) => {
       clearTimeout(timer);
+      release();
       reject(e);
     });
     child.on("close", (code) => {
       clearTimeout(timer);
+      release();
       if (code !== 0 && !out.trim()) {
         return reject(new Error(`data_cli ${cmd} exited ${code}: ${err.slice(0, 400)}`));
       }
@@ -54,7 +90,10 @@ export function runJson(cmd, opts = {}, { timeoutMs = 120000, input = null } = {
 
 // Run a command that streams NDJSON events (one JSON object per line).
 // Returns the final {"type":"result"} object, or null.
-export function runStream(cmd, opts = {}, onEvent, { timeoutMs = 200000 } = {}) {
+export async function runStream(cmd, opts = {}, onEvent, { timeoutMs = 200000 } = {}) {
+  await acquireSlot();
+  let released = false;
+  const release = () => { if (!released) { released = true; releaseSlot(); } };
   return new Promise((resolve, reject) => {
     const child = spawn(PYTHON, buildArgs(cmd, opts), { cwd: process.cwd() });
     let buf = "";
@@ -94,10 +133,12 @@ export function runStream(cmd, opts = {}, onEvent, { timeoutMs = 200000 } = {}) 
     child.stderr.on("data", (d) => (err += d));
     child.on("error", (e) => {
       clearTimeout(timer);
+      release();
       reject(e);
     });
     child.on("close", (code) => {
       clearTimeout(timer);
+      release();
       if (buf.trim()) handleLine(buf);
       if (code !== 0 && result == null) {
         return reject(new Error(`data_cli ${cmd} exited ${code}: ${err.slice(0, 400)}`));

@@ -43,16 +43,24 @@ def _load_env() -> None:
             os.environ.setdefault(k.strip(), v.strip())
 
 
+# The REAL stdout, captured before any connector can touch it. yahoo_news wraps
+# yfinance calls in a redirect-stdout-to-devnull context that is not thread-safe:
+# when several run concurrently the restore order races and sys.stdout can end
+# up stuck on devnull, silently swallowing the final JSON. Writing through this
+# saved handle makes the output immune to that.
+_STDOUT = sys.stdout
+
+
 def _emit(obj) -> None:
     """Print one compact JSON line and flush (for NDJSON streaming)."""
-    sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
-    sys.stdout.flush()
+    _STDOUT.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    _STDOUT.flush()
 
 
 def _out(obj) -> None:
     """Print the final JSON result."""
-    sys.stdout.write(json.dumps(obj, ensure_ascii=False))
-    sys.stdout.flush()
+    _STDOUT.write(json.dumps(obj, ensure_ascii=False))
+    _STDOUT.flush()
 
 
 # ------------------------------------------------------------------ #
@@ -251,6 +259,108 @@ def cmd_offline(args) -> int:
     return 0
 
 
+def cmd_markets(args) -> int:
+    """Just the headline index quotes — public, holdings-free, for the landing
+    page's live market strip. One parallel fan-out of bounded chart calls."""
+    from concurrent.futures import ThreadPoolExecutor
+    from lib.yahoo_finance import get_quick_quote
+
+    INDICES = [("^GSPC", "S&P 500"), ("^IXIC", "Nasdaq"), ("^DJI", "Dow"), ("BTC-USD", "Bitcoin")]
+
+    def _index(pair):
+        sym, label = pair
+        q = get_quick_quote(sym) or {}
+        q["label"] = label
+        q["symbol"] = sym
+        return q
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        quotes = [q for q in pool.map(_index, INDICES) if q.get("price") is not None]
+    _out({"indices": quotes})
+    return 0
+
+
+def cmd_home(args) -> int:
+    """Everything the in-app Today page needs, in one parallel fan-out.
+
+    Returns {indices, events, headlines}. Holdings come from stdin (per-user
+    accounts) or the local file store, same convention as portfolio-overview.
+    Every fetch is bounded and failure-tolerant: a slow calendar or news call
+    degrades to an empty slot, never an error.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import date
+    from lib.yahoo_finance import get_quick_quote
+    from lib.yahoo_news import get_stock_news, get_upcoming_events
+    from lib import store
+
+    if getattr(args, "holdings_stdin", False):
+        raw = sys.stdin.read()
+        try:
+            holdings = json.loads(raw) if raw.strip() else []
+        except (ValueError, TypeError):
+            holdings = []
+    else:
+        holdings = store.get_holdings()
+    tickers = [str(h.get("ticker") or "").upper() for h in holdings if h.get("ticker")][:8]
+
+    INDICES = [("^GSPC", "S&P 500"), ("^IXIC", "Nasdaq"), ("^DJI", "Dow"), ("BTC-USD", "Bitcoin")]
+
+    def _index(pair):
+        sym, label = pair
+        q = get_quick_quote(sym) or {}
+        q["label"] = label
+        q["symbol"] = sym
+        return q
+
+    def _events_for(sym):
+        ev = get_upcoming_events(sym) or {}
+        out = []
+        today = date.today()
+        for kind, key in (("earnings", "earnings_date"), ("ex-dividend", "ex_dividend_date")):
+            iso = ev.get(key)
+            if not iso:
+                continue
+            try:
+                d = date.fromisoformat(str(iso)[:10])
+            except ValueError:
+                continue
+            days = (d - today).days
+            if 0 <= days <= 45:  # only the actionable horizon
+                out.append({"ticker": sym, "kind": kind, "date": d.isoformat(), "days": days})
+        return out
+
+    def _news_for(sym):
+        items = get_stock_news(sym, limit=3, max_age_days=5) or []
+        for n in items:
+            n["ticker"] = sym
+        return items
+
+    indices, events, headlines = [], [], []
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        idx_f = pool.map(_index, INDICES)
+        ev_f = pool.map(_events_for, tickers)
+        news_f = pool.map(_news_for, tickers)
+        indices = [q for q in idx_f if q.get("price") is not None]
+        for chunk in ev_f:
+            events.extend(chunk)
+        for chunk in news_f:
+            headlines.extend(chunk)
+
+    events.sort(key=lambda e: e["days"])
+    headlines.sort(key=lambda n: n.get("published_at") or "", reverse=True)
+    _out({
+        "indices": indices,
+        "events": events[:6],
+        "headlines": [
+            {"ticker": n.get("ticker"), "title": n.get("title"), "url": n.get("url"),
+             "publisher": n.get("publisher"), "age": n.get("age")}
+            for n in headlines[:6] if n.get("title")
+        ],
+    })
+    return 0
+
+
 def main() -> int:
     _load_env()
     p = argparse.ArgumentParser(prog="data_cli")
@@ -275,6 +385,8 @@ def main() -> int:
     add("research", cmd_research)
     add("offline", cmd_offline)
     add("portfolio-overview", cmd_portfolio_overview, needs_symbol=False)
+    add("home", cmd_home, needs_symbol=False)
+    add("markets", cmd_markets, needs_symbol=False)
 
     args = p.parse_args()
     return args.func(args)

@@ -3,15 +3,13 @@
 // back to the local JSON file store (web/data/*.json), so nothing breaks.
 import mongoose from "mongoose";
 
-let connected = false;
-
 export async function connectDB() {
   const uri = (process.env.MONGODB_URI || "").trim();
   if (!uri) {
     process.stderr.write("[db] MONGODB_URI not set — accounts disabled, using local file store.\n");
     return false;
   }
-  if (connected && mongoose.connection.readyState === 1) return true;
+  if (mongoose.connection.readyState === 1) return true;
   try {
     mongoose.set("strictQuery", true);
     await mongoose.connect(uri, {
@@ -25,15 +23,12 @@ export async function connectDB() {
       // after auth while probing replica-set members over IPv6; IPv4 avoids it.
       family: 4,
     });
-    connected = true;
     process.stderr.write(`[db] MongoDB connected (db: ${mongoose.connection.name})\n`);
 
     mongoose.connection.on("error", (e) =>
       process.stderr.write(`[db] connection error: ${e.message}\n`));
-    mongoose.connection.on("disconnected", () => {
-      connected = false;
-      process.stderr.write("[db] MongoDB disconnected\n");
-    });
+    mongoose.connection.on("disconnected", () =>
+      process.stderr.write("[db] MongoDB disconnected\n"));
     return true;
   } catch (e) {
     process.stderr.write(`[db] MongoDB connection FAILED: ${e.message}\n`);
@@ -45,7 +40,10 @@ export async function connectDB() {
 }
 
 // True only when a live, ready connection exists. Routes use this to decide
-// whether to serve account features or fall back to the file store.
+// whether to serve account features or fall back to the file store. Reads
+// Mongoose's own connection state directly (rather than a separately tracked
+// flag), so it self-heals the instant the driver reconnects in the background —
+// no restart required after a transient drop (idle timeout, network blip, etc).
 export function isDBConnected() {
-  return connected && mongoose.connection.readyState === 1;
+  return mongoose.connection.readyState === 1;
 }

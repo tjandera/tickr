@@ -9,6 +9,7 @@ import { signSession, makeVerifyToken, makeOtp, sha256 } from "../lib/tokens.js"
 import { sendVerificationEmail, sendLoginOtp } from "../lib/email.js";
 import { loginLimiter, otpLimiter, signupLimiter } from "../middleware/rateLimit.js";
 import { requireAuth } from "../middleware/auth.js";
+import { logError } from "../lib/log.js";
 
 const router = Router();
 
@@ -68,7 +69,8 @@ router.post("/api/auth/signup", signupLimiter, async (req, res) => {
     await sendVerificationEmail(email, raw);
     res.json({ status: "ok", message: "Check your email to confirm your account." });
   } catch (e) {
-    res.status(500).json({ detail: `Signup failed: ${e.message}` });
+    logError("auth.signup", e);
+    res.status(500).json({ detail: "Signup failed. Please try again." });
   }
 });
 
@@ -88,7 +90,8 @@ router.get("/api/auth/verify", async (req, res) => {
     await user.save();
     res.redirect(`${APP_URL()}/auth?verified=1`);
   } catch (e) {
-    res.status(500).send(`Verification failed: ${e.message}`);
+    logError("auth.verify", e);
+    res.status(500).send("Verification failed. Please try again.");
   }
 });
 
@@ -116,7 +119,8 @@ router.post("/api/auth/login", loginLimiter, async (req, res) => {
 
     res.json({ status: "otp_required", email, message: "We emailed you a 6-digit login code." });
   } catch (e) {
-    res.status(500).json({ detail: `Login failed: ${e.message}` });
+    logError("auth.login", e);
+    res.status(500).json({ detail: "Login failed. Please try again." });
   }
 });
 
@@ -153,7 +157,8 @@ router.post("/api/auth/verify-otp", otpLimiter, async (req, res) => {
     setSessionCookie(res, signSession(user));
     res.json({ status: "ok", user: user.toSafeJSON(), onboarded: (user.holdings?.length || 0) > 0 });
   } catch (e) {
-    res.status(500).json({ detail: `Verification failed: ${e.message}` });
+    logError("auth.verify-otp", e);
+    res.status(500).json({ detail: "Verification failed. Please try again." });
   }
 });
 
@@ -182,7 +187,8 @@ router.patch("/api/auth/password", loginLimiter, requireAuth, async (req, res) =
     await req.user.save();
     res.json({ status: "ok", message: "Password updated." });
   } catch (e) {
-    res.status(500).json({ detail: `Could not update password: ${e.message}` });
+    logError("auth.password", e);
+    res.status(500).json({ detail: "Could not update the password. Please try again." });
   }
 });
 
@@ -202,7 +208,8 @@ router.delete("/api/auth/account", loginLimiter, requireAuth, async (req, res) =
     clearSessionCookie(res);
     res.json({ status: "ok", message: "Account deleted." });
   } catch (e) {
-    res.status(500).json({ detail: `Could not delete account: ${e.message}` });
+    logError("auth.delete", e);
+    res.status(500).json({ detail: "Could not delete the account. Please try again." });
   }
 });
 

@@ -20,13 +20,15 @@ router.get("/api/health", (req, res) => {
     model = "agnes-2.0-flash";
   }
 
-  const webKey = ["BRAVE_API_KEY", "SERPER_API_KEY", "TAVILY_API_KEY"].find((k) => process.env[k]);
+  // Booleans only — this endpoint is public, so it must not enumerate which
+  // vendor keys are configured on the server.
+  const hasWebSearch = ["BRAVE_API_KEY", "SERPER_API_KEY", "TAVILY_API_KEY"].some((k) => process.env[k]);
   res.json({
     live: Boolean(active),
     backend: active,
     model,
     agnes: Boolean(active), // back-compat: the masthead lamp reads this
-    web_search: webKey || false,
+    web_search: hasWebSearch,
     accounts: isDBConnected(), // when true, the app requires a login
   });
 });
